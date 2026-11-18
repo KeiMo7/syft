@@ -61,6 +61,9 @@ syft <image> -o cyclonedx-json
 syft <image> -o spdx-json=./spdx.json -o cyclonedx-json=./cdx.json
 ```
 
+For output-only runtime trimming, per-business-line rules, and audit metadata, see
+[Output-only SBOM trimming](OUTPUT_TRIMMING.md).
+
 ### Local containers-storage images
 
 On Linux, syft can scan images from a local containers-storage store (e.g. built with Buildah or Podman) when asked explicitly; plain image references never look there:

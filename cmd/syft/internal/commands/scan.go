@@ -26,6 +26,7 @@ import (
 	"github.com/anchore/syft/internal/file"
 	"github.com/anchore/syft/internal/log"
 	"github.com/anchore/syft/internal/task"
+	"github.com/anchore/syft/internal/trim"
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/anchore/syft/syft/source"
@@ -217,6 +218,21 @@ func runScan(ctx context.Context, id clio.Identification, opts *scanOptions, use
 
 	if s == nil {
 		return fmt.Errorf("no SBOM produced for %q", userInput)
+	}
+
+	if opts.Trim.Enabled {
+		trimmed, report, err := trim.Apply(*s, &opts.Trim)
+		if err != nil {
+			return fmt.Errorf("unable to trim SBOM output: %w", err)
+		}
+		if report.RulesReloadedAtApply {
+			log.Infof("trim rules reloaded from %s", report.RulesSource)
+		}
+		for _, warning := range report.Warnings {
+			log.Warnf("SBOM trim: %s", warning)
+			bus.Notify("SBOM trim: " + warning)
+		}
+		s = &trimmed
 	}
 
 	if err := writer.Write(*s); err != nil {

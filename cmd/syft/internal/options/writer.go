@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 
@@ -195,13 +196,16 @@ func newSBOMMultiWriter(options ...sbomWriterDescription) (_ *sbomMultiWriter, e
 					return nil, fmt.Errorf("output path does not contain a valid directory: %s", option.Path)
 				}
 			}
-			fileOut, err := os.OpenFile(option.Path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+			tmpPath := option.Path + ".incomplete"
+			fileOut, err := os.OpenFile(tmpPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create report file: %w", err)
 			}
 			out.writers = append(out.writers, &sbomStreamWriter{
-				format: option.Format,
-				out:    fileOut,
+				format:  option.Format,
+				out:     fileOut,
+				path:    option.Path,
+				tmpPath: tmpPath,
 			})
 		}
 	}
@@ -236,22 +240,68 @@ func (m *sbomMultiWriter) Close() error {
 
 // sbomStreamWriter implements sbom.Writer for a given format and io.Writer, also providing a close function for cleanup
 type sbomStreamWriter struct {
-	format sbom.FormatEncoder
-	out    io.Writer
+	format     sbom.FormatEncoder
+	out        *os.File
+	path       string
+	tmpPath    string
+	wrote      bool
+	incomplete bool
+	closed     bool
 }
 
 // Write the provided SBOM to the data stream
 func (w *sbomStreamWriter) Write(s sbom.SBOM) error {
-	defer w.Close()
-	return w.format.Encode(w.out, s)
+	if err := w.format.Encode(w.out, s); err != nil {
+		w.incomplete = true
+		_ = w.Close()
+		return err
+	}
+	if err := w.out.Close(); err != nil {
+		w.incomplete = true
+		w.closed = true
+		return err
+	}
+	w.closed = true
+
+	if err := finalizeReportFile(w.tmpPath, w.path); err != nil {
+		w.incomplete = true
+		return fmt.Errorf("unable to finalize report file %q: %w", w.path, err)
+	}
+	w.wrote = true
+	return nil
 }
 
 // Close any resources, such as open files
 func (w *sbomStreamWriter) Close() error {
-	if closer, ok := w.out.(io.Closer); ok {
-		return closer.Close()
+	if w.closed {
+		if !w.wrote && !w.incomplete && w.tmpPath != "" {
+			_ = os.Remove(w.tmpPath)
+		}
+		return nil
 	}
-	return nil
+	w.closed = true
+
+	err := w.out.Close()
+	if !w.wrote && !w.incomplete && w.tmpPath != "" {
+		_ = os.Remove(w.tmpPath)
+	}
+	return err
+}
+
+func finalizeReportFile(tmpPath, path string) error {
+	renameErr := os.Rename(tmpPath, path)
+	if renameErr == nil {
+		return nil
+	}
+
+	// Windows does not replace an existing destination with os.Rename.
+	if runtime.GOOS != "windows" {
+		return renameErr
+	}
+	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	return os.Rename(tmpPath, path)
 }
 
 // sbomPublisher implements sbom.Writer that publishes results to the event bus

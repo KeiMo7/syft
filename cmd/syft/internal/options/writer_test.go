@@ -214,7 +214,8 @@ func Test_newSBOMMultiWriter(t *testing.T) {
 					assert.Equal(t, string(w.format.ID()), e.format)
 					assert.NotNil(t, w.out)
 					if e.file != "" {
-						assert.FileExists(t, tmp+e.file)
+						assert.FileExists(t, tmp+e.file+".incomplete")
+						assert.NoFileExists(t, tmp+e.file)
 					}
 				case *sbomPublisher:
 					assert.Equal(t, string(w.format.ID()), e.format)

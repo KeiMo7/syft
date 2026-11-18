@@ -9,6 +9,7 @@ import (
 	"github.com/scylladb/go-set/strset"
 
 	"github.com/anchore/clio"
+	"github.com/anchore/syft/internal/trim"
 	"github.com/anchore/syft/syft/format/cyclonedxjson"
 	"github.com/anchore/syft/syft/format/cyclonedxxml"
 	"github.com/anchore/syft/syft/format/github"
@@ -36,6 +37,7 @@ type Output struct {
 	Outputs              []string `yaml:"output" json:"output" mapstructure:"output"` // -o, the format to use for output
 	OutputFile           `yaml:",inline" json:"" mapstructure:",squash"`
 	Format               `yaml:"format" json:"format" mapstructure:"format"`
+	Trim                 trim.Config `yaml:"trim" json:"trim" mapstructure:"trim" description:"output-only component trimming rules"`
 }
 
 func DefaultOutput() Output {
@@ -52,7 +54,7 @@ func DefaultOutput() Output {
 
 func (o *Output) PostLoad() error {
 	var errs error
-	for _, loader := range []clio.PostLoader{&o.OutputFile, &o.Format} {
+	for _, loader := range []clio.PostLoader{&o.OutputFile, &o.Format, &o.Trim} {
 		if err := loader.PostLoad(); err != nil {
 			errs = multierror.Append(errs, err)
 		}
@@ -79,6 +81,9 @@ output:
   - "syft-json=<syft-json-output-file>"
   - "spdx-json=<spdx-json-output-file>"
 `)
+	descriptions.Add(&o.Trim, `output-only component trimming. Disabled by default.
+Categories are build, dev, and test. Path, category, and dependency-depth rules
+can be selected per business line while the SBOM scan itself remains unchanged.`)
 }
 
 func (o Output) SBOMWriter() (sbom.Writer, error) {
