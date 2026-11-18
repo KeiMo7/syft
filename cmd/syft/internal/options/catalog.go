@@ -15,6 +15,7 @@ import (
 	"github.com/anchore/syft/internal/task"
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/cataloging"
+	"github.com/anchore/syft/syft/cataloging/exclusions"
 	"github.com/anchore/syft/syft/cataloging/filecataloging"
 	"github.com/anchore/syft/syft/cataloging/pkgcataloging"
 	"github.com/anchore/syft/syft/file/cataloger/executable"
@@ -61,8 +62,17 @@ type Catalog struct {
 	Source     sourceConfig   `yaml:"source" json:"source" mapstructure:"source"`
 	Exclusions []string       `yaml:"exclude" json:"exclude" mapstructure:"exclude"`
 
+	ExclusionRules     []exclusions.RuleConfig `yaml:"exclusion-rules" json:"exclusion-rules" mapstructure:"exclusion-rules"`
+	ExclusionAuditFile string                  `yaml:"exclusion-audit-file" json:"exclusion-audit-file" mapstructure:"exclusion-audit-file"`
+
 	// configuration for inclusion of unknown information within elements
 	Unknowns unknownsConfig `yaml:"unknowns" mapstructure:"unknowns"`
+
+	exclusionRuleArgs     []string
+	exclusionPathArgs     []string
+	exclusionEcoArgs      []string
+	exclusionLayerArgs    []string
+	exclusionPathRecorder *exclusions.PathRecorder
 }
 
 var _ interface {
@@ -106,6 +116,8 @@ func (cfg Catalog) ToSBOMConfig(id clio.Identification) *syft.CreateSBOMConfig {
 		WithPackagesConfig(cfg.ToPackagesConfig()).
 		WithLicenseConfig(cfg.ToLicenseConfig()).
 		WithFilesConfig(cfg.ToFilesConfig()).
+		WithExclusionConfig(cfg.ToExclusionConfig()).
+		WithExclusionPathRecorder(cfg.exclusionPathRecorder).
 		WithCatalogerSelection(
 			cataloging.NewSelectionRequest().
 				WithDefaults(cfg.DefaultCatalogers...).
@@ -231,6 +243,17 @@ func (cfg Catalog) ToPackagesConfig() pkgcataloging.Config {
 	}
 }
 
+func (cfg Catalog) ToExclusionConfig() exclusions.Config {
+	return exclusions.Config{
+		Rules:     slices.Clone(cfg.ExclusionRules),
+		AuditFile: cfg.ExclusionAuditFile,
+	}
+}
+
+func (cfg *Catalog) SetExclusionPathRecorder(recorder *exclusions.PathRecorder) {
+	cfg.exclusionPathRecorder = recorder
+}
+
 func (cfg *Catalog) AddFlags(flags clio.FlagSet) {
 	var validScopeValues []string
 	for _, scope := range source.AllScopes {
@@ -247,6 +270,21 @@ func (cfg *Catalog) AddFlags(flags clio.FlagSet) {
 
 	flags.StringArrayVarP(&cfg.Exclusions, "exclude", "",
 		"exclude paths from being scanned using a glob expression")
+
+	flags.StringArrayVarP(&cfg.exclusionRuleArgs, "exclude-rule", "",
+		"exclude components with a structured rule (action=exclude|include,path=<glob>,ecosystem=<name>,layer=<digest>); may be repeated")
+
+	flags.StringArrayVarP(&cfg.exclusionPathArgs, "exclude-path-glob", "",
+		"exclude packages discovered below a path glob (may be repeated)")
+
+	flags.StringArrayVarP(&cfg.exclusionEcoArgs, "exclude-ecosystem", "",
+		"disable package parsing and exclude packages for an ecosystem or package manager (e.g. npm, python, maven); may be repeated")
+
+	flags.StringArrayVarP(&cfg.exclusionLayerArgs, "exclude-layer", "",
+		"exclude packages whose discovery locations are all in the given image layer digest or layer glob; may be repeated")
+
+	flags.StringVarP(&cfg.ExclusionAuditFile, "exclusion-audit-file", "",
+		"write exclusion statistics and match records to this file as soon as they are known")
 
 	flags.IntVarP(&cfg.Parallelism, "parallelism", "",
 		"number of cataloger workers to run in parallel")
@@ -271,6 +309,12 @@ func (cfg *Catalog) DescribeFields(descriptions fangs.FieldDescriptionSet) {
 	descriptions.Add(&cfg.Parallelism, `number of cataloger workers to run in parallel
 by default, when set to 0: this will be based on runtime.NumCPU * 4, if set to less than 0 it will be unbounded`)
 
+	descriptions.Add(&cfg.ExclusionRules, `component exclusion rules evaluated before the SBOM is finalized
+each rule may match a path glob, an ecosystem/package manager, an image layer, or a combination; the most specific match wins and include rules break ties`)
+
+	descriptions.Add(&cfg.ExclusionAuditFile, `write exclusion rules, statistics, path hits, and package decisions atomically to this file
+the audit is also embedded in the SBOM descriptor configuration`)
+
 	descriptions.Add(&cfg.Enrich, fmt.Sprintf(`Enable data enrichment operations, which can utilize services such as Maven Central and NPM.
 By default all enrichment is disabled, use: all to enable everything.
 Available options are: %s`, strings.Join(publicisedEnrichmentOptions, ", ")))
@@ -279,6 +323,10 @@ Available options are: %s`, strings.Join(publicisedEnrichmentOptions, ", ")))
 func (cfg *Catalog) PostLoad() error {
 	cfg.From = Flatten(cfg.From)
 	cfg.Enrich = FlattenAndSort(cfg.Enrich)
+
+	if err := cfg.loadExclusionRuleArgs(); err != nil {
+		return err
+	}
 
 	s := source.ParseScope(cfg.Scope)
 	if s == source.UnknownScope {
@@ -290,6 +338,35 @@ func (cfg *Catalog) PostLoad() error {
 		return fmt.Errorf("cannot enable exclude-binary-overlap-by-ownership without enabling package-file-ownership-overlap")
 	}
 
+	if err := cfg.ToExclusionConfig().Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cfg *Catalog) loadExclusionRuleArgs() error {
+	for i, expression := range cfg.exclusionRuleArgs {
+		rule, err := exclusions.ParseRuleExpression(expression)
+		if err != nil {
+			return fmt.Errorf("invalid --exclude-rule value %d: %w", i+1, err)
+		}
+		cfg.ExclusionRules = append(cfg.ExclusionRules, rule)
+	}
+	for _, path := range cfg.exclusionPathArgs {
+		cfg.ExclusionRules = append(cfg.ExclusionRules, exclusions.RuleConfig{Path: path})
+	}
+	for _, ecosystem := range cfg.exclusionEcoArgs {
+		cfg.ExclusionRules = append(cfg.ExclusionRules, exclusions.RuleConfig{Ecosystem: ecosystem})
+	}
+	for _, layer := range cfg.exclusionLayerArgs {
+		cfg.ExclusionRules = append(cfg.ExclusionRules, exclusions.RuleConfig{Layer: layer})
+	}
+
+	cfg.exclusionRuleArgs = nil
+	cfg.exclusionPathArgs = nil
+	cfg.exclusionEcoArgs = nil
+	cfg.exclusionLayerArgs = nil
 	return nil
 }
 

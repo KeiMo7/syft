@@ -3,6 +3,7 @@ package stereoscopesource
 import (
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/distribution/reference"
@@ -119,8 +120,11 @@ func (s stereoscopeImageSource) FileResolver(scope source.Scope) (file.Resolver,
 	}
 
 	// image tree contains all paths, so we filter out the excluded entries afterward
-	if len(s.config.Exclude.Paths) > 0 {
-		res = fileresolver.NewExcludingDecorator(res, getImageExclusionFunction(s.config.Exclude.Paths))
+	if len(s.config.Exclude.Paths) > 0 || len(s.config.Exclude.Rules) > 0 {
+		res = fileresolver.NewExcludingDecorator(
+			res,
+			getImageExclusionFunctionWithRules(s.config.Exclude.Paths, s.config.Exclude.Rules, s.config.Exclude.Observer),
+		)
 	}
 
 	return res, nil
@@ -128,7 +132,11 @@ func (s stereoscopeImageSource) FileResolver(scope source.Scope) (file.Resolver,
 
 // ExcludedPaths returns the exclusion patterns this source was configured with.
 func (s stereoscopeImageSource) ExcludedPaths() []string {
-	return slices.Clone(s.config.Exclude.Paths)
+	paths := slices.Clone(s.config.Exclude.Paths)
+	for _, rule := range s.config.Exclude.Rules {
+		paths = append(paths, rule.Pattern)
+	}
+	return paths
 }
 
 func (s stereoscopeImageSource) Close() error {
@@ -172,21 +180,55 @@ func imageMetadataFromStereoscopeImage(img *image.Image, reference string) sourc
 }
 
 func getImageExclusionFunction(exclusions []string) func(string) bool {
-	if len(exclusions) == 0 {
+	return getImageExclusionFunctionWithRules(exclusions, nil, nil)
+}
+
+func getImageExclusionFunctionWithRules(
+	exclusions []string,
+	rules []source.PathExclusionRule,
+	observer source.PathExclusionObserver,
+) func(string) bool {
+	if len(exclusions) == 0 && len(rules) == 0 {
 		return nil
 	}
 	// add subpath exclusions
 	for _, exclusion := range exclusions {
 		exclusions = append(exclusions, exclusion+"/**")
 	}
+	type imageExclusion struct {
+		pattern     string
+		displayPath string
+		ruleIndex   int
+	}
+	candidates := make([]imageExclusion, 0, len(exclusions))
+	for _, exclusion := range exclusions {
+		candidates = append(candidates, imageExclusion{pattern: exclusion, displayPath: exclusion})
+	}
+	for _, rule := range rules {
+		pattern := strings.TrimPrefix(rule.Pattern, "./")
+		candidates = append(candidates,
+			imageExclusion{pattern: pattern, displayPath: rule.Pattern, ruleIndex: rule.RuleIndex},
+			imageExclusion{pattern: pattern + "/**", displayPath: rule.Pattern, ruleIndex: rule.RuleIndex},
+		)
+	}
 	return func(path string) bool {
-		for _, exclusion := range exclusions {
-			matches, err := doublestar.Match(exclusion, path)
-			if err != nil {
-				return false
-			}
-			if matches {
-				return true
+		normalizedPath := strings.TrimPrefix(path, "/")
+		for _, exclusion := range candidates {
+			for _, candidatePath := range []string{path, normalizedPath} {
+				matches, err := doublestar.Match(exclusion.pattern, candidatePath)
+				if err != nil {
+					return false
+				}
+				if matches {
+					if observer != nil && exclusion.ruleIndex > 0 {
+						observer.ObservePathExclusion(source.PathExclusionEvent{
+							Pattern:   exclusion.displayPath,
+							RuleIndex: exclusion.ruleIndex,
+							Path:      path,
+						})
+					}
+					return true
+				}
 			}
 		}
 		return false

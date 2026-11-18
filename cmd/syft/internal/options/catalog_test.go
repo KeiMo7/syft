@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCatalog_PostLoad(t *testing.T) {
@@ -34,6 +35,32 @@ func TestCatalog_PostLoad(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCatalog_PostLoad_ExclusionRules(t *testing.T) {
+	cfg := DefaultCatalog()
+	cfg.exclusionRuleArgs = []string{"path=**/vendor/**,action=exclude"}
+	cfg.exclusionPathArgs = []string{"node_modules"}
+	cfg.exclusionEcoArgs = []string{"npm"}
+	cfg.exclusionLayerArgs = []string{"sha256:deadbeef"}
+
+	require.NoError(t, cfg.PostLoad())
+	require.Len(t, cfg.ExclusionRules, 4)
+	assert.Equal(t, "**/vendor/**", cfg.ExclusionRules[0].Path)
+	assert.Equal(t, "node_modules", cfg.ExclusionRules[1].Path)
+	assert.Equal(t, "npm", cfg.ExclusionRules[2].Ecosystem)
+	assert.Equal(t, "sha256:deadbeef", cfg.ExclusionRules[3].Layer)
+	assert.Empty(t, cfg.exclusionRuleArgs)
+	assert.Empty(t, cfg.exclusionPathArgs)
+	assert.Empty(t, cfg.exclusionEcoArgs)
+	assert.Empty(t, cfg.exclusionLayerArgs)
+
+	invalid := DefaultCatalog()
+	invalid.exclusionRuleArgs = []string{"path=**/ok/**", "path=**/[broken/**"}
+	err := invalid.PostLoad()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "exclusion rule 2")
+	assert.Contains(t, err.Error(), "invalid path wildcard")
 }
 
 func TestFlatten(t *testing.T) {

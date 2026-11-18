@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"runtime"
 	"sort"
+	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/scylladb/go-set/strset"
@@ -19,6 +20,7 @@ import (
 	"github.com/anchore/syft/internal/tmpdir"
 	"github.com/anchore/syft/syft/artifact"
 	"github.com/anchore/syft/syft/cataloging"
+	"github.com/anchore/syft/syft/cataloging/exclusions"
 	"github.com/anchore/syft/syft/event/monitor"
 	"github.com/anchore/syft/syft/pkg"
 	"github.com/anchore/syft/syft/sbom"
@@ -37,9 +39,15 @@ func CreateSBOM(ctx context.Context, src source.Source, cfg *CreateSBOMConfig) (
 		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
 
+	runCfg := *cfg
+	matcher, err := runCfg.exclusionMatcherForRun()
+	if err != nil {
+		return nil, fmt.Errorf("invalid exclusion configuration: %w", err)
+	}
+
 	srcMetadata := src.Describe()
 
-	taskGroups, audit, err := cfg.makeTaskGroups(srcMetadata, sourceExclusions(src))
+	taskGroups, audit, err := runCfg.makeTaskGroups(srcMetadata, sourceExclusions(src))
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +83,7 @@ func CreateSBOM(ctx context.Context, src source.Source, cfg *CreateSBOMConfig) (
 	callerOwnsTempDir := tmpdir.FromContext(ctx) != nil
 
 	// setup everything we need in context: license scanner, executors, temp storage, etc.
-	ctx, err = setupContext(ctx, cfg)
+	ctx, err = setupContext(ctx, &runCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +107,9 @@ func CreateSBOM(ctx context.Context, src source.Source, cfg *CreateSBOMConfig) (
 			return nil, task.RunTask(ctx, t, resolver, builder, catalogingProgress)
 		}, nil)
 		if err != nil {
-			// TODO: tie this to the open progress monitors...
+			if auditErr := finalizeExclusions(&s, &runCfg, matcher, ctx.Err() != nil); auditErr != nil {
+				return nil, fmt.Errorf("failed to run tasks: %w (also failed to persist exclusion audit: %v)", err, auditErr)
+			}
 			return nil, fmt.Errorf("failed to run tasks: %w", err)
 		}
 	}
@@ -107,7 +117,80 @@ func CreateSBOM(ctx context.Context, src source.Source, cfg *CreateSBOMConfig) (
 	packageCatalogingProgress.SetCompleted()
 	catalogingProgress.SetCompleted()
 
+	if err := finalizeExclusions(&s, &runCfg, matcher, false); err != nil {
+		return nil, err
+	}
+
 	return &s, nil
+}
+
+func finalizeExclusions(s *sbom.SBOM, cfg *CreateSBOMConfig, matcher *exclusions.Matcher, interrupted bool) error {
+	if matcher == nil || !cfg.Exclusions.Enabled() {
+		return nil
+	}
+
+	result := matcher.Evaluate(s.Artifacts.Packages.Sorted())
+	if len(result.RemoveIDs) > 0 {
+		ids := make([]artifact.ID, 0, len(result.RemoveIDs))
+		removed := make(map[string]struct{}, len(result.RemoveIDs))
+		for _, id := range result.RemoveIDs {
+			ids = append(ids, artifact.ID(id))
+			removed[id] = struct{}{}
+		}
+		s.Artifacts.Packages.Delete(ids...)
+
+		relationships := s.Relationships[:0]
+		for _, relationship := range s.Relationships {
+			if relationship.From == nil || relationship.To == nil {
+				relationships = append(relationships, relationship)
+				continue
+			}
+			if _, ok := removed[string(relationship.From.ID())]; ok {
+				continue
+			}
+			if _, ok := removed[string(relationship.To.ID())]; ok {
+				continue
+			}
+			relationships = append(relationships, relationship)
+		}
+		s.Relationships = relationships
+	}
+
+	audit := result.Audit
+	audit.Interrupted = interrupted
+	cfg.exclusionPathRecorder.Apply(&audit)
+	audit.SkippedCatalogers = append(audit.SkippedCatalogers, cfg.skippedCatalogers...)
+	sort.Slice(audit.SkippedCatalogers, func(i, j int) bool {
+		if audit.SkippedCatalogers[i].Cataloger != audit.SkippedCatalogers[j].Cataloger {
+			return audit.SkippedCatalogers[i].Cataloger < audit.SkippedCatalogers[j].Cataloger
+		}
+		return audit.SkippedCatalogers[i].RuleIndex < audit.SkippedCatalogers[j].RuleIndex
+	})
+
+	if trail, ok := s.Descriptor.Configuration.(configurationAuditTrail); ok {
+		trail.Exclusions = &audit
+		s.Descriptor.Configuration = trail
+	}
+
+	if audit.IsOverlyBroad() {
+		log.WithFields(
+			"evaluated", audit.EvaluatedPackageCount,
+			"excluded", audit.ExcludedPackageCount,
+			"excluded-paths", audit.ExcludedPathCount,
+			"skipped-catalogers", len(audit.SkippedCatalogers),
+			"rules", strings.Join(ruleSummaries(audit.Rules), ", "),
+		).Warn("exclusion rules removed every cataloged package; the rules may be too broad")
+	}
+
+	return exclusions.NewWriter(cfg.Exclusions.AuditFile).Write(audit)
+}
+
+func ruleSummaries(rules []exclusions.RuleAudit) []string {
+	out := make([]string, 0, len(rules))
+	for _, rule := range rules {
+		out = append(out, fmt.Sprintf("%d", rule.Index))
+	}
+	return out
 }
 
 func setupContext(ctx context.Context, cfg *CreateSBOMConfig) (context.Context, error) {

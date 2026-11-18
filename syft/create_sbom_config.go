@@ -10,6 +10,7 @@ import (
 	"github.com/anchore/syft/internal/log"
 	"github.com/anchore/syft/internal/task"
 	"github.com/anchore/syft/syft/cataloging"
+	"github.com/anchore/syft/syft/cataloging/exclusions"
 	"github.com/anchore/syft/syft/cataloging/filecataloging"
 	"github.com/anchore/syft/syft/cataloging/pkgcataloging"
 	"github.com/anchore/syft/syft/file"
@@ -29,6 +30,7 @@ type CreateSBOMConfig struct {
 	Licenses           cataloging.LicenseConfig
 	Files              filecataloging.Config
 	Archive            cataloging.ArchiveSearchConfig
+	Exclusions         exclusions.Config
 	Parallelism        int
 	CatalogerSelection cataloging.SelectionRequest
 
@@ -39,6 +41,9 @@ type CreateSBOMConfig struct {
 
 	packageTaskFactories       task.Factories
 	packageCatalogerReferences []pkgcataloging.CatalogerReference
+	exclusionMatcher           *exclusions.Matcher
+	exclusionPathRecorder      *exclusions.PathRecorder
+	skippedCatalogers          []exclusions.CatalogerSkip
 }
 
 func DefaultCreateSBOMConfig() *CreateSBOMConfig {
@@ -153,6 +158,21 @@ func (c *CreateSBOMConfig) WithArchiveConfig(cfg cataloging.ArchiveSearchConfig)
 	return c
 }
 
+// WithExclusionConfig sets package exclusion and audit rules. An empty configuration leaves
+// cataloging and the SBOM output unchanged.
+func (c *CreateSBOMConfig) WithExclusionConfig(cfg exclusions.Config) *CreateSBOMConfig {
+	c.Exclusions = cfg
+	c.exclusionMatcher = nil
+	return c
+}
+
+// WithExclusionPathRecorder supplies source-traversal path hits so they can be included
+// in the same audit as package-level decisions.
+func (c *CreateSBOMConfig) WithExclusionPathRecorder(recorder *exclusions.PathRecorder) *CreateSBOMConfig {
+	c.exclusionPathRecorder = recorder
+	return c
+}
+
 // WithoutFiles allows for disabling file cataloging altogether.
 func (c *CreateSBOMConfig) WithoutFiles() *CreateSBOMConfig {
 	c.Files = filecataloging.Config{
@@ -196,6 +216,10 @@ func (c *CreateSBOMConfig) WithCatalogers(catalogerRefs ...pkgcataloging.Catalog
 // exclusions are the source's exclusion patterns, which the archive cataloger applies inside each archive.
 func (c *CreateSBOMConfig) makeTaskGroups(src source.Description, exclusions []string) ([][]task.Task, *catalogerManifest, error) {
 	var taskGroups [][]task.Task
+
+	if _, err := c.exclusionMatcherForRun(); err != nil {
+		return nil, nil, err
+	}
 
 	// generate package and file tasks based on the configuration
 	environmentTasks := c.environmentTasks()
@@ -335,6 +359,7 @@ func (c *CreateSBOMConfig) selectTasks(src source.Description) ([]task.Task, []t
 	finalFileTasks := finalTaskGroups[1]
 
 	finalPkgTasks = append(finalPkgTasks, persistentPkgTasks...)
+	finalPkgTasks = c.applyCatalogerExclusions(finalPkgTasks)
 
 	if len(finalPkgTasks) == 0 && len(finalFileTasks) == 0 {
 		return nil, nil, nil, fmt.Errorf("no catalogers selected")
@@ -516,6 +541,9 @@ func (c *CreateSBOMConfig) packagesWithArchiveSearch() pkgcataloging.Config {
 }
 
 func (c *CreateSBOMConfig) validate() error {
+	if _, err := c.exclusionMatcherForRun(); err != nil {
+		return err
+	}
 	if c.Relationships.ExcludeBinaryPackagesWithFileOwnershipOverlap {
 		if !c.Relationships.PackageFileOwnershipOverlap {
 			return fmt.Errorf("invalid configuration: to exclude binary packages based on file ownership overlap relationships, cataloging file ownership overlap relationships must be enabled")
@@ -528,6 +556,50 @@ func (c *CreateSBOMConfig) validate() error {
 		return fmt.Errorf("invalid configuration: nested archive cataloging is enabled but its memory and disk limits are both 0, leaving nowhere to extract archives")
 	}
 	return nil
+}
+
+func (c *CreateSBOMConfig) exclusionMatcherForRun() (*exclusions.Matcher, error) {
+	if c.exclusionMatcher != nil {
+		return c.exclusionMatcher, nil
+	}
+	matcher, err := exclusions.NewMatcher(c.Exclusions)
+	if err != nil {
+		return nil, err
+	}
+	c.exclusionMatcher = matcher
+	return matcher, nil
+}
+
+func (c *CreateSBOMConfig) applyCatalogerExclusions(tsks []task.Task) []task.Task {
+	matcher := c.exclusionMatcher
+	if matcher == nil {
+		return tsks
+	}
+
+	var remaining []task.Task
+	for _, tsk := range tsks {
+		selector, ok := tsk.(task.Selector)
+		if !ok {
+			remaining = append(remaining, tsk)
+			continue
+		}
+
+		skip, excluded := matcher.TaskExcluded(selector.Selectors())
+		if !excluded {
+			remaining = append(remaining, tsk)
+			continue
+		}
+
+		skip.Cataloger = tsk.Name()
+		c.skippedCatalogers = append(c.skippedCatalogers, skip)
+		log.WithFields(
+			"cataloger", tsk.Name(),
+			"ecosystem", skip.Ecosystem,
+			"rule", skip.RuleIndex,
+		).Info("package cataloger disabled by exclusion rule")
+	}
+
+	return remaining
 }
 
 // Create creates an SBOM from the given source with the current SBOM configuration.

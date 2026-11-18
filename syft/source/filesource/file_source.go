@@ -151,7 +151,12 @@ func (s *fileSource) FileResolver(_ source.Scope) (file.Resolver, error) {
 		return s.resolver, nil
 	}
 
-	exclusionFunctions, err := directorysource.GetDirectoryExclusionFunctions(s.analysisPath, s.config.Exclude.Paths)
+	exclusionFunctions, err := directorysource.GetDirectoryExclusionFunctionsWithRules(
+		s.analysisPath,
+		s.config.Exclude.Paths,
+		s.config.Exclude.Rules,
+		s.config.Exclude.Observer,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +189,11 @@ func (s *fileSource) FileResolver(_ source.Scope) (file.Resolver, error) {
 
 // ExcludedPaths returns the exclusion patterns this source was configured with.
 func (s fileSource) ExcludedPaths() []string {
-	return slices.Clone(s.config.Exclude.Paths)
+	paths := slices.Clone(s.config.Exclude.Paths)
+	for _, rule := range s.config.Exclude.Rules {
+		paths = append(paths, rule.Pattern)
+	}
+	return paths
 }
 
 func (s *fileSource) Close() error {

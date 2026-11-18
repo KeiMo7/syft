@@ -6,7 +6,58 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/anchore/syft/cmd/syft/internal/options"
+	"github.com/anchore/syft/syft/cataloging/exclusions"
 )
+
+func Test_setDefaultExclusionAuditFile(t *testing.T) {
+	tests := []struct {
+		name string
+		opts scanOptions
+		want string
+	}{
+		{
+			name: "disabled without rules",
+			opts: scanOptions{},
+			want: "",
+		},
+		{
+			name: "uses output sidecar",
+			opts: scanOptions{
+				Output: options.Output{Outputs: []string{"syft-json=sbom.json"}},
+				Catalog: options.Catalog{
+					ExclusionRules: []exclusions.RuleConfig{{Ecosystem: "npm"}},
+				},
+			},
+			want: "sbom.json.exclusions.json",
+		},
+		{
+			name: "uses stdout fallback",
+			opts: scanOptions{
+				Catalog: options.Catalog{
+					ExclusionRules: []exclusions.RuleConfig{{Ecosystem: "npm"}},
+				},
+			},
+			want: "syft-exclusions.json",
+		},
+		{
+			name: "preserves explicit path",
+			opts: scanOptions{
+				Catalog: options.Catalog{
+					ExclusionRules:     []exclusions.RuleConfig{{Ecosystem: "npm"}},
+					ExclusionAuditFile: "custom.json",
+				},
+			},
+			want: "custom.json",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setDefaultExclusionAuditFile(&tt.opts)
+			assert.Equal(t, tt.want, tt.opts.Catalog.ExclusionAuditFile)
+		})
+	}
+}
 
 func Test_scanOptions_validateLegacyOptionsNotUsed(t *testing.T) {
 	tests := []struct {

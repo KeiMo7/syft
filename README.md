@@ -61,6 +61,40 @@ syft <image> -o cyclonedx-json
 syft <image> -o spdx-json=./spdx.json -o cyclonedx-json=./cdx.json
 ```
 
+### Package exclusions
+
+Package exclusions are opt-in and can be expressed in the configuration file or on the command line. Rules support path prefixes with glob syntax, package ecosystems/package managers, image layers, and include exceptions. When rules overlap, the rule with more populated dimensions wins; within the same specificity, a literal path prefix is more specific than a wildcard, and `include` wins a tie.
+
+```yaml
+exclusion-rules:
+  - path: "**/vendor/**"
+  - path: "**/node_modules/**"
+    ecosystem: npm
+  - path: "app/vendor/runtime/**"
+    action: include
+  - ecosystem: python
+  - layer: "sha256:4f4fb700ef54"
+exclusion-audit-file: ./exclusions.json
+```
+
+The same rules can be supplied with repeatable flags:
+
+```bash
+syft ./my-project \
+  --exclude-rule 'path=**/vendor/**,ecosystem=go' \
+  --exclude-rule 'path=app/vendor/runtime/**,action=include' \
+  --exclude-ecosystem npm \
+  --exclude-layer sha256:4f4fb700ef54 \
+  --exclusion-audit-file ./exclusions.json \
+  -o syft-json=sbom.json
+```
+
+`--exclude-path-glob` is a shorthand for a path-only rule. A pure ecosystem exclusion disables the corresponding package catalogers before scanning. Pure path rules are also applied as traversal exclusions when possible; rules with include exceptions stay package-level so the exception can be evaluated. If any rule removes every cataloged package, Syft emits a warning and retains the counts.
+
+Exclusion decisions are recorded under `descriptor.configuration.exclusions` in the SBOM. Each rule is listed with its 1-based index, unique matched package count, affected package records, skipped catalogers, and aggregate before/after counts. The optional audit file is written atomically as soon as the scan finishes or is interrupted, allowing the same scan to be reproduced later.
+
+Without `exclusion-rules`, no exclusion work is performed and the SBOM shape is unchanged.
+
 ### Local containers-storage images
 
 On Linux, syft can scan images from a local containers-storage store (e.g. built with Buildah or Podman) when asked explicitly; plain image references never look there:

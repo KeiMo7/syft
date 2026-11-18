@@ -27,6 +27,7 @@ import (
 	"github.com/anchore/syft/internal/log"
 	"github.com/anchore/syft/internal/task"
 	"github.com/anchore/syft/syft"
+	"github.com/anchore/syft/syft/cataloging/exclusions"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/anchore/syft/syft/source"
 	"github.com/anchore/syft/syft/source/sourceproviders"
@@ -178,6 +179,8 @@ func runScan(ctx context.Context, id clio.Identification, opts *scanOptions, use
 		log.Infof("scan completed in %s", time.Since(scanStart).Round(time.Millisecond))
 	}()
 
+	setDefaultExclusionAuditFile(opts)
+
 	writer, err := opts.SBOMWriter()
 	if err != nil {
 		return err
@@ -227,6 +230,28 @@ func runScan(ctx context.Context, id clio.Identification, opts *scanOptions, use
 }
 
 func getSource(ctx context.Context, opts *options.Catalog, userInput string, sources ...string) (source.Source, error) {
+	matcher, matcherErr := exclusions.NewMatcher(opts.ToExclusionConfig())
+	if matcherErr != nil {
+		return nil, matcherErr
+	}
+
+	exclusionPaths := append([]string(nil), opts.Exclusions...)
+	sourcePathRules := matcher.SourcePathRules()
+	excludeConfig := source.ExcludeConfig{Paths: exclusionPaths}
+	if len(sourcePathRules) > 0 {
+		recorder := exclusions.NewPathRecorder()
+		opts.SetExclusionPathRecorder(recorder)
+		excludeConfig.Observer = source.PathExclusionObserverFunc(func(event source.PathExclusionEvent) {
+			recorder.Record(event.RuleIndex, event.Pattern, event.Path)
+		})
+		for _, rule := range sourcePathRules {
+			excludeConfig.Rules = append(excludeConfig.Rules, source.PathExclusionRule{
+				Pattern:   rule.Pattern,
+				RuleIndex: rule.RuleIndex,
+			})
+		}
+	}
+
 	cfg := syft.DefaultGetSourceConfig().
 		WithRegistryOptions(opts.Registry.ToOptions()).
 		WithAlias(source.Alias{
@@ -234,9 +259,7 @@ func getSource(ctx context.Context, opts *options.Catalog, userInput string, sou
 			Version:  opts.Source.Version,
 			Supplier: opts.Source.Supplier,
 		}).
-		WithExcludeConfig(source.ExcludeConfig{
-			Paths: opts.Exclusions,
-		}).
+		WithExcludeConfig(excludeConfig).
 		WithBasePath(opts.Source.BasePath).
 		WithSources(sources...).
 		WithDefaultImagePullSource(opts.Source.Image.DefaultPullSource)
@@ -271,6 +294,24 @@ func getSource(ctx context.Context, opts *options.Catalog, userInput string, sou
 	}
 
 	return src, nil
+}
+
+func setDefaultExclusionAuditFile(opts *scanOptions) {
+	if len(opts.Catalog.ExclusionRules) == 0 || opts.Catalog.ExclusionAuditFile != "" {
+		return
+	}
+
+	for _, output := range opts.Outputs {
+		_, path, hasPath := strings.Cut(output, "=")
+		if !hasPath || strings.TrimSpace(path) == "" {
+			continue
+		}
+		opts.Catalog.ExclusionAuditFile = path + ".exclusions.json"
+		return
+	}
+
+	// Keep interruption evidence deterministic even when the SBOM itself is written to stdout.
+	opts.Catalog.ExclusionAuditFile = "syft-exclusions.json"
 }
 
 func generateSBOM(ctx context.Context, id clio.Identification, src source.Source, opts *options.Catalog) (*sbom.SBOM, error) {

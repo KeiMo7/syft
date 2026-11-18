@@ -101,7 +101,12 @@ func (s *directorySource) FileResolver(_ source.Scope) (file.Resolver, error) {
 		return s.resolver, nil
 	}
 
-	exclusionFunctions, err := GetDirectoryExclusionFunctions(s.config.Path, s.config.Exclude.Paths)
+	exclusionFunctions, err := GetDirectoryExclusionFunctionsWithRules(
+		s.config.Path,
+		s.config.Exclude.Paths,
+		s.config.Exclude.Rules,
+		s.config.Exclude.Observer,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +125,11 @@ func (s *directorySource) FileResolver(_ source.Scope) (file.Resolver, error) {
 
 // ExcludedPaths returns the exclusion patterns this source was configured with.
 func (s directorySource) ExcludedPaths() []string {
-	return slices.Clone(s.config.Exclude.Paths)
+	paths := slices.Clone(s.config.Exclude.Paths)
+	for _, rule := range s.config.Exclude.Rules {
+		paths = append(paths, rule.Pattern)
+	}
+	return paths
 }
 
 func (s *directorySource) Close() error {
@@ -132,7 +141,16 @@ func (s *directorySource) Close() error {
 }
 
 func GetDirectoryExclusionFunctions(root string, exclusions []string) ([]fileresolver.PathIndexVisitor, error) {
-	if len(exclusions) == 0 {
+	return GetDirectoryExclusionFunctionsWithRules(root, exclusions, nil, nil)
+}
+
+func GetDirectoryExclusionFunctionsWithRules(
+	root string,
+	exclusions []string,
+	rules []source.PathExclusionRule,
+	observer source.PathExclusionObserver,
+) ([]fileresolver.PathIndexVisitor, error) {
+	if len(exclusions) == 0 && len(rules) == 0 {
 		return nil, nil
 	}
 
@@ -155,7 +173,13 @@ func GetDirectoryExclusionFunctions(root string, exclusions []string) ([]fileres
 	}
 
 	// the given patterns are the source's configuration (see source.PathExcluder), so they are not rewritten in place
-	rooted := make([]string, 0, len(exclusions))
+	type rootedExclusion struct {
+		pattern     string
+		displayPath string
+		ruleIndex   int
+	}
+
+	rooted := make([]rootedExclusion, 0, len(exclusions)+len(rules))
 	var errors []string
 	for _, exclusion := range exclusions {
 		// check exclusions for supported paths, these are all relative to the "scan root"
@@ -164,10 +188,23 @@ func GetDirectoryExclusionFunctions(root string, exclusions []string) ([]fileres
 			// a trailing slash signals a directory but is otherwise discarded by doublestar.Match,
 			// causing the pattern to silently match nothing (see issue #4839)
 			exclusion = strings.TrimSuffix(exclusion, "/")
-			rooted = append(rooted, root+exclusion)
+			rooted = append(rooted, rootedExclusion{pattern: root + exclusion, displayPath: exclusion})
 		} else {
 			errors = append(errors, exclusion)
 		}
+	}
+	for _, rule := range rules {
+		exclusion := rule.Pattern
+		if !strings.HasPrefix(exclusion, "./") && !strings.HasPrefix(exclusion, "*/") && !strings.HasPrefix(exclusion, "**/") {
+			exclusion = "./" + exclusion
+		}
+		exclusion = strings.TrimPrefix(exclusion, "./")
+		exclusion = strings.TrimSuffix(exclusion, "/")
+		rooted = append(rooted, rootedExclusion{
+			pattern:     root + exclusion,
+			displayPath: exclusion,
+			ruleIndex:   rule.RuleIndex,
+		})
 	}
 
 	if errors != nil {
@@ -179,11 +216,20 @@ func GetDirectoryExclusionFunctions(root string, exclusions []string) ([]fileres
 			for _, exclusion := range rooted {
 				// this is required to handle Windows filepaths
 				path = filepath.ToSlash(path)
-				matches, err := doublestar.Match(exclusion, path)
+				matches, err := doublestar.Match(exclusion.pattern, path)
 				if err != nil {
 					return nil
 				}
 				if matches {
+					if observer != nil {
+						displayPath := strings.TrimPrefix(path, root)
+						displayPath = strings.TrimPrefix(displayPath, "/")
+						observer.ObservePathExclusion(source.PathExclusionEvent{
+							Pattern:   exclusion.displayPath,
+							RuleIndex: exclusion.ruleIndex,
+							Path:      displayPath,
+						})
+					}
 					if info != nil && info.IsDir() {
 						return filepath.SkipDir
 					}

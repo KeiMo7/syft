@@ -111,6 +111,26 @@ func Test_StereoscopeImage_Exclusions(t *testing.T) {
 	}
 }
 
+func Test_getImageExclusionFunctionWithRules(t *testing.T) {
+	var events []source.PathExclusionEvent
+	exclude := getImageExclusionFunctionWithRules(
+		nil,
+		[]source.PathExclusionRule{
+			{Pattern: "./usr/local/lib/node_modules/**", RuleIndex: 1},
+			{Pattern: "**/node_modules/**", RuleIndex: 2},
+		},
+		source.PathExclusionObserverFunc(func(event source.PathExclusionEvent) {
+			events = append(events, event)
+		}),
+	)
+	require.NotNil(t, exclude)
+
+	assert.True(t, exclude("/usr/local/lib/node_modules/npm/index.js"))
+	require.Len(t, events, 1)
+	assert.Equal(t, 1, events[0].RuleIndex)
+	assert.Equal(t, "/usr/local/lib/node_modules/npm/index.js", events[0].Path)
+}
+
 func Test_Describe(t *testing.T) {
 	tests := []struct {
 		name     string

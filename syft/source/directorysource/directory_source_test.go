@@ -431,6 +431,29 @@ func Test_getDirectoryExclusionFunctions_crossPlatform(t *testing.T) {
 	}
 }
 
+func Test_getDirectoryExclusionFunctions_recordsRuleHit(t *testing.T) {
+	var events []source.PathExclusionEvent
+	fns, err := GetDirectoryExclusionFunctionsWithRules(
+		"/usr",
+		nil,
+		[]source.PathExclusionRule{
+			{Pattern: "**/vendor/**", RuleIndex: 2},
+			{Pattern: "**/vendor/**", RuleIndex: 3},
+		},
+		source.PathExclusionObserverFunc(func(event source.PathExclusionEvent) {
+			events = append(events, event)
+		}),
+	)
+	require.NoError(t, err)
+	require.Len(t, fns, 1)
+
+	err = fns[0]("", "/usr/app/vendor/lib", file.ManualInfo{ModeValue: os.ModeDir}, nil)
+	require.Equal(t, fs.SkipDir, err)
+	require.Len(t, events, 1, "only the first matching source rule should produce an event")
+	assert.Equal(t, 2, events[0].RuleIndex)
+	assert.Equal(t, "app/vendor/lib", events[0].Path)
+}
+
 func Test_DirectorySource_FilesByPathDoesNotExist(t *testing.T) {
 	testutil.Chdir(t, "..") // run with source/testdata
 

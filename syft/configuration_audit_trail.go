@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/anchore/syft/syft/cataloging"
+	"github.com/anchore/syft/syft/cataloging/exclusions"
 	"github.com/anchore/syft/syft/cataloging/filecataloging"
 	"github.com/anchore/syft/syft/cataloging/pkgcataloging"
 )
@@ -19,6 +20,7 @@ type configurationAuditTrail struct {
 	Archive        cataloging.ArchiveSearchConfig  `json:"archive" yaml:"archive" mapstructure:"archive"`
 	Licenses       cataloging.LicenseConfig        `json:"licenses" yaml:"licenses" mapstructure:"licenses"`
 	Catalogers     catalogerManifest               `json:"catalogers" yaml:"catalogers" mapstructure:"catalogers"`
+	Exclusions     *exclusions.Audit               `json:"exclusions,omitempty" yaml:"exclusions,omitempty" mapstructure:"exclusions"`
 	ExtraConfigs   any                             `json:"extra,omitempty" yaml:"extra" mapstructure:"extra"`
 }
 
