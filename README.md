@@ -61,6 +61,18 @@ syft <image> -o cyclonedx-json
 syft <image> -o spdx-json=./spdx.json -o cyclonedx-json=./cdx.json
 ```
 
+### Comparing two SBOMs
+
+`syft diff` compares two SBOM snapshots and reports added, removed and version-changed
+components with deterministic PURL-based identity rules, direct/transitive dependency
+layer grouping, high-risk filtering and machine-readable output (JSON/JSONL) for
+unattended pipeline gating. See [`syft/diff/README.md`](syft/diff/README.md) for the
+identity rules, report fields and gating examples.
+
+```bash
+syft diff old.syft.json new.syft.json --diff-format json --fail-on high-risk
+```
+
 ### Local containers-storage images
 
 On Linux, syft can scan images from a local containers-storage store (e.g. built with Buildah or Podman) when asked explicitly; plain image references never look there:
