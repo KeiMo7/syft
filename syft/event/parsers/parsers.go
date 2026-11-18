@@ -97,6 +97,25 @@ func ParsePullSourceStarted(e partybus.Event) (progress.StagedProgressable, *mon
 	return mon, &source, nil
 }
 
+func ParseCatalogingProgress(e partybus.Event) (*monitor.CatalogingProgress, error) {
+	if err := checkEventType(e.Type, event.CatalogingProgress); err != nil {
+		return nil, err
+	}
+
+	switch value := e.Value.(type) {
+	case monitor.CatalogingProgress:
+		return &value, nil
+	case *monitor.CatalogingProgress:
+		if value == nil {
+			return nil, newPayloadErr(e.Type, "Value", e.Value)
+		}
+		copied := *value
+		return &copied, nil
+	default:
+		return nil, newPayloadErr(e.Type, "Value", e.Value)
+	}
+}
+
 func ParseAttestationStartedEvent(e partybus.Event) (io.Reader, progress.Progressable, *monitor.GenericTask, error) {
 	if err := checkEventType(e.Type, event.AttestationStarted); err != nil {
 		return nil, nil, nil, err

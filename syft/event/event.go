@@ -27,6 +27,10 @@ const (
 	// this covers any additional sources such as snap and git repos).
 	PullSourceStarted partybus.EventType = typePrefix + "-pull-source-started"
 
+	// CatalogingProgress is a partybus event that carries a periodic snapshot of stage-level
+	// cataloging counts, durations, failures, and remaining work.
+	CatalogingProgress partybus.EventType = typePrefix + "-cataloging-progress"
+
 	// Events exclusively for the CLI
 
 	// CLIAppUpdateAvailable is a partybus event that occurs when an application update is available

@@ -17,6 +17,7 @@ import (
 	"github.com/anchore/syft/internal/bus"
 	"github.com/anchore/syft/internal/log"
 	"github.com/anchore/syft/internal/mimetype"
+	"github.com/anchore/syft/internal/progress"
 	"github.com/anchore/syft/internal/sbomsync"
 	"github.com/anchore/syft/internal/unknown"
 	"github.com/anchore/syft/syft/artifact"
@@ -211,7 +212,18 @@ func (c *archiveCataloger) processArchive(ctx context.Context, parentResolver fi
 	// reached by, so it is stable and joins to the archive's package location by prefix.
 	traversal := &archive.Traversal{Location: location, Parent: archive.TraversalFromContext(ctx)}
 	archivePath := location.FullNestedPath()
-	extracted, err := archive.Extract(ctx, archiveContent, location.Coordinates, c.limiter, c.exclusions)
+	extractCtx, extractStage := progress.Begin(
+		progress.WithLayerContext(ctx, depth+1),
+		"archive-extract",
+		progress.WithLayer(depth+1),
+		progress.WithParser(archivePath),
+	)
+	extracted, err := archive.Extract(extractCtx, archiveContent, location.Coordinates, c.limiter, c.exclusions)
+	stageErr := err
+	if errors.Is(err, archive.ErrUnsupportedFormat) || errors.Is(err, archive.ErrDiskLimitReached) {
+		stageErr = nil
+	}
+	extractStage.End(stageErr)
 	if errors.Is(err, archive.ErrUnsupportedFormat) {
 		if c.reportUnsupportedUnknowns {
 			recordArchiveUnknown(builder, location.Coordinates, "archive not cataloged: "+err.Error())
@@ -255,7 +267,8 @@ func (c *archiveCataloger) processArchive(ctx context.Context, parentResolver fi
 	// everything found in this archive and the archives nested in it, merged into the parent's SBOM once complete
 	found := &sbom.SBOM{Artifacts: sbom.Artifacts{Packages: pkg.NewCollection()}}
 	foundBuilder := sbomsync.NewBuilder(found)
-	runArchiveTasks(ctx, c.pkgTasks, extracted, location.Coordinates, foundBuilder)
+	taskCtx := progress.WithLayerContext(ctx, depth+1)
+	runArchiveTasks(taskCtx, c.pkgTasks, extracted, location.Coordinates, foundBuilder)
 	direct := found.Artifacts.Packages.Sorted()
 	traversal.Packages = packagesAt(direct, location.Coordinates)
 
@@ -264,10 +277,10 @@ func (c *archiveCataloger) processArchive(ctx context.Context, parentResolver fi
 
 	// as at the scan root, nested archives are cataloged before this archive's files, so the packages
 	// describing them (located in this archive) select their files here
-	errs := c.catalogCandidates(ctx, extracted, c.discoverArchives(extracted), depth+1, foundBuilder)
+	errs := c.catalogCandidates(taskCtx, extracted, c.discoverArchives(extracted), depth+1, foundBuilder)
 
 	started = time.Now()
-	runArchiveTasks(ctx, c.fileTasks, extracted, location.Coordinates, foundBuilder)
+	runArchiveTasks(taskCtx, c.fileTasks, extracted, location.Coordinates, foundBuilder)
 	// the files within it are related once the scan has decided which it describes (see NewArchiveContainsTask)
 	for _, p := range direct {
 		found.Relationships = append(found.Relationships, artifact.Relationship{From: location.Coordinates, To: p, Type: artifact.ContainsRelationship})
@@ -337,9 +350,12 @@ func recordArchiveUnknown(builder sbomsync.Builder, coordinates file.Coordinates
 // Failures are recorded as RunTask records them at the top level: errors carrying coordinates keep
 // them, anything else is attributed to the archive. A failure never fails the archive or the scan.
 func runArchiveTasks(ctx context.Context, tasks []Task, resolver file.Resolver, archiveCoordinates file.Coordinates, builder sbomsync.Builder) {
+	progress.Expect(ctx, int64(len(tasks)))
 	for _, t := range tasks {
-		err := runSubTaskSafely(ctx, t, resolver, builder)
+		taskCtx, stage := progress.Begin(ctx, t.Name())
+		err := runSubTaskSafely(taskCtx, t, resolver, builder)
 		if err == nil {
+			stage.End(nil)
 			continue
 		}
 		log.WithFields("task", t.Name(), "error", err).Trace("archive sub-cataloger task reported an error")
@@ -349,6 +365,7 @@ func runArchiveTasks(ctx context.Context, tasks []Task, resolver file.Resolver, 
 			unknowns = append(unknowns, unknown.CoordinateError{Coordinates: archiveCoordinates, Reason: remaining})
 		}
 		appendUnknowns(builder, t.Name(), unknowns)
+		stage.End(remaining)
 	}
 }
 

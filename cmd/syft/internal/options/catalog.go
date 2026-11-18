@@ -5,6 +5,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/iancoleman/strcase"
 
@@ -43,6 +44,7 @@ type Catalog struct {
 	Relationships relationshipsConfig `yaml:"relationships" json:"relationships" mapstructure:"relationships"`
 	Compliance    complianceConfig    `yaml:"compliance" json:"compliance" mapstructure:"compliance"`
 	Enrich        []string            `yaml:"enrich" json:"enrich" mapstructure:"enrich"`
+	Progress      progressConfig      `yaml:"progress" json:"progress" mapstructure:"progress"`
 
 	// ecosystem-specific cataloger configuration
 	Cpp         cppConfig         `yaml:"cpp" json:"cpp" mapstructure:"cpp"`
@@ -90,8 +92,31 @@ func DefaultCatalog() Catalog {
 		Relationships: defaultRelationshipsConfig(),
 		Unknowns:      defaultUnknowns(),
 		Source:        defaultSourceConfig(),
+		Progress:      defaultProgressConfig(),
 		Parallelism:   cfg.Parallelism,
 	}
+}
+
+type progressConfig struct {
+	Enabled         bool `yaml:"enabled" json:"enabled" mapstructure:"enabled"`
+	IntervalSeconds int  `yaml:"interval-seconds" json:"interval-seconds" mapstructure:"interval-seconds"`
+}
+
+func defaultProgressConfig() progressConfig {
+	return progressConfig{
+		Enabled:         false,
+		IntervalSeconds: int(cataloging.DefaultProgressInterval / time.Second),
+	}
+}
+
+func (cfg progressConfig) ToConfig() cataloging.ProgressConfig {
+	interval := time.Duration(cfg.IntervalSeconds) * time.Second
+	if interval <= 0 {
+		interval = cataloging.DefaultProgressInterval
+	}
+	return cataloging.DefaultProgressConfig().
+		WithEnabled(cfg.Enabled).
+		WithInterval(interval)
 }
 
 func (cfg Catalog) ToSBOMConfig(id clio.Identification) *syft.CreateSBOMConfig {
@@ -101,6 +126,7 @@ func (cfg Catalog) ToSBOMConfig(id clio.Identification) *syft.CreateSBOMConfig {
 		WithRelationshipsConfig(cfg.ToRelationshipsConfig()).
 		WithComplianceConfig(cfg.ToComplianceConfig()).
 		WithUnknownsConfig(cfg.ToUnknownsConfig()).
+		WithProgressConfig(cfg.Progress.ToConfig()).
 		WithSearchConfig(cfg.ToSearchConfig()).
 		WithArchiveConfig(cfg.ToArchiveConfig()).
 		WithPackagesConfig(cfg.ToPackagesConfig()).
@@ -254,6 +280,12 @@ func (cfg *Catalog) AddFlags(flags clio.FlagSet) {
 	flags.StringArrayVarP(&cfg.Enrich, "enrich", "",
 		fmt.Sprintf("enable package data enrichment from local and online sources (options: %s)", strings.Join(publicisedEnrichmentOptions, ", ")))
 
+	flags.BoolVarP(&cfg.Progress.Enabled, "catalog-progress", "",
+		"emit stage-level cataloging progress snapshots to stderr (disabled by default)")
+
+	flags.IntVarP(&cfg.Progress.IntervalSeconds, "catalog-progress-interval", "",
+		"seconds between cataloging progress snapshots (disabled by default)")
+
 	flags.StringVarP(&cfg.Source.Name, "source-name", "",
 		"set the name of the target being analyzed")
 
@@ -274,6 +306,9 @@ by default, when set to 0: this will be based on runtime.NumCPU * 4, if set to l
 	descriptions.Add(&cfg.Enrich, fmt.Sprintf(`Enable data enrichment operations, which can utilize services such as Maven Central and NPM.
 By default all enrichment is disabled, use: all to enable everything.
 Available options are: %s`, strings.Join(publicisedEnrichmentOptions, ", ")))
+
+	descriptions.Add(&cfg.Progress.Enabled, "emit stage-level cataloging progress snapshots as JSON lines to stderr")
+	descriptions.Add(&cfg.Progress.IntervalSeconds, "seconds between cataloging progress snapshots")
 }
 
 func (cfg *Catalog) PostLoad() error {

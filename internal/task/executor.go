@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/anchore/syft/internal/log"
+	"github.com/anchore/syft/internal/progress"
 	"github.com/anchore/syft/internal/sbomsync"
 	"github.com/anchore/syft/internal/unknown"
 	"github.com/anchore/syft/syft/event/monitor"
@@ -16,6 +17,7 @@ import (
 )
 
 func RunTask(ctx context.Context, tsk Task, resolver file.Resolver, s sbomsync.Builder, prog *monitor.TaskProgress) error {
+	ctx, stage := progress.Begin(ctx, tsk.Name())
 	err := runTaskSafely(ctx, tsk, resolver, s)
 	unknowns, remainingErrors := unknown.ExtractCoordinateErrors(err)
 	if len(unknowns) > 0 {
@@ -24,6 +26,7 @@ func RunTask(ctx context.Context, tsk Task, resolver file.Resolver, s sbomsync.B
 	if remainingErrors != nil {
 		prog.SetError(remainingErrors)
 	}
+	stage.End(remainingErrors)
 	prog.Increment()
 	return remainingErrors
 }

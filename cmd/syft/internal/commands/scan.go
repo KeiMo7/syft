@@ -25,6 +25,7 @@ import (
 	"github.com/anchore/syft/internal/bus"
 	"github.com/anchore/syft/internal/file"
 	"github.com/anchore/syft/internal/log"
+	"github.com/anchore/syft/internal/progress"
 	"github.com/anchore/syft/internal/task"
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/sbom"
@@ -274,7 +275,13 @@ func getSource(ctx context.Context, opts *options.Catalog, userInput string, sou
 }
 
 func generateSBOM(ctx context.Context, id clio.Identification, src source.Source, opts *options.Catalog) (*sbom.SBOM, error) {
-	s, err := syft.CreateSBOM(ctx, src, opts.ToSBOMConfig(id))
+	cfg := opts.ToSBOMConfig(id)
+	if cfg.Progress.Enabled {
+		// The CLI writes directly so the final interrupt snapshot does not depend on the event-loop
+		// subscription still being active while the worker is being torn down.
+		cfg.Progress.Sink = progress.NewEventWriter(os.Stderr).Write
+	}
+	s, err := syft.CreateSBOM(ctx, src, cfg)
 	if err != nil {
 		expErrs := filterExpressionErrors(err)
 		notifyExpressionErrors(expErrs)

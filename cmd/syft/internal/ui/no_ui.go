@@ -15,6 +15,7 @@ var _ clio.UI = (*NoUI)(nil)
 type NoUI struct {
 	out            io.Writer
 	err            io.Writer
+	progress       *progressWriter
 	finalizeEvents []partybus.Event
 	subscription   partybus.Unsubscribable
 	quiet          bool
@@ -22,9 +23,10 @@ type NoUI struct {
 
 func None(out io.Writer, quiet bool) *NoUI {
 	return &NoUI{
-		out:   out,
-		err:   os.Stderr,
-		quiet: quiet,
+		out:      out,
+		err:      os.Stderr,
+		progress: newProgressWriter(os.Stderr),
+		quiet:    quiet,
 	}
 }
 
@@ -35,6 +37,8 @@ func (n *NoUI) Setup(subscription partybus.Unsubscribable) error {
 
 func (n *NoUI) Handle(e partybus.Event) error {
 	switch e.Type {
+	case event.CatalogingProgress:
+		n.progress.WriteEvent(e)
 	case event.CLIReport, event.CLINotification:
 		// keep these for when the UI is terminated to show to the screen (or perform other events)
 		n.finalizeEvents = append(n.finalizeEvents, e)

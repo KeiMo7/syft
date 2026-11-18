@@ -29,6 +29,7 @@ type CreateSBOMConfig struct {
 	Licenses           cataloging.LicenseConfig
 	Files              filecataloging.Config
 	Archive            cataloging.ArchiveSearchConfig
+	Progress           cataloging.ProgressConfig
 	Parallelism        int
 	CatalogerSelection cataloging.SelectionRequest
 
@@ -51,6 +52,7 @@ func DefaultCreateSBOMConfig() *CreateSBOMConfig {
 		Licenses:             cataloging.DefaultLicenseConfig(),
 		Files:                filecataloging.DefaultConfig(),
 		Archive:              cataloging.DefaultArchiveSearchConfig(),
+		Progress:             cataloging.DefaultProgressConfig(),
 		Parallelism:          0, // use default: run in parallel based on number of CPUs
 		packageTaskFactories: task.DefaultPackageTaskFactories(),
 
@@ -150,6 +152,12 @@ func (c *CreateSBOMConfig) WithFilesConfig(cfg filecataloging.Config) *CreateSBO
 // 0, the default, does not recurse) and how much extracted content the scan may hold at once.
 func (c *CreateSBOMConfig) WithArchiveConfig(cfg cataloging.ArchiveSearchConfig) *CreateSBOMConfig {
 	c.Archive = cfg
+	return c
+}
+
+// WithProgressConfig controls stage-level progress reporting. Reporting is disabled by default.
+func (c *CreateSBOMConfig) WithProgressConfig(cfg cataloging.ProgressConfig) *CreateSBOMConfig {
+	c.Progress = cfg
 	return c
 }
 

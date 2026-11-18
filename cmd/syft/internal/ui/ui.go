@@ -36,6 +36,7 @@ type UI struct {
 	quiet          bool
 	subscription   partybus.Unsubscribable
 	finalizeEvents []partybus.Event
+	progress       *progressWriter
 
 	handler *bubbly.HandlerCollection
 	frame   tea.Model
@@ -43,12 +44,13 @@ type UI struct {
 
 func New(out io.Writer, quiet bool, handlers ...bubbly.EventHandler) *UI {
 	return &UI{
-		out:     out,
-		err:     os.Stderr,
-		handler: bubbly.NewHandlerCollection(handlers...),
-		frame:   frame.New(),
-		running: &sync.WaitGroup{},
-		quiet:   quiet,
+		out:      out,
+		err:      os.Stderr,
+		handler:  bubbly.NewHandlerCollection(handlers...),
+		frame:    frame.New(),
+		running:  &sync.WaitGroup{},
+		quiet:    quiet,
+		progress: newProgressWriter(os.Stderr),
 	}
 }
 
@@ -74,6 +76,20 @@ func (m *UI) Setup(subscription partybus.Unsubscribable) error {
 }
 
 func (m *UI) Handle(e partybus.Event) error {
+	if e.Type == event.CatalogingProgress {
+		line, err := progressLine(e)
+		if err != nil {
+			log.WithFields("error", err).Warn("unable to format cataloging progress")
+			return nil
+		}
+		if m.program != nil {
+			m.program.Printf("%s\n", line)
+		} else {
+			m.progress.WriteEvent(e)
+		}
+		return nil
+	}
+
 	if m.program != nil {
 		m.program.Send(e)
 	}
@@ -128,6 +144,7 @@ func (m UI) RespondsTo() []partybus.EventType {
 		event.CLIReport,
 		event.CLINotification,
 		event.CLIAppUpdateAvailable,
+		event.CatalogingProgress,
 	}, m.handler.RespondsTo()...)
 }
 

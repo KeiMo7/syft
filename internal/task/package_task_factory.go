@@ -10,6 +10,7 @@ import (
 	"github.com/anchore/syft/internal/archive"
 	"github.com/anchore/syft/internal/bus"
 	"github.com/anchore/syft/internal/log"
+	"github.com/anchore/syft/internal/progress"
 	"github.com/anchore/syft/internal/relationship"
 	"github.com/anchore/syft/internal/sbomsync"
 	"github.com/anchore/syft/syft/artifact"
@@ -63,6 +64,7 @@ func NewPackageTask(cfg CatalogingFactoryConfig, c pkg.Cataloger, tags ...string
 		sbom.AddPackages(pkgs...)
 		sbom.AddRelationships(relationships...)
 		t.Add(int64(len(pkgs)))
+		progress.Annotate(ctx, progress.WithCount(int64(len(pkgs))), progress.WithParser(catalogerName))
 
 		t.SetCompleted()
 		log.WithFields("name", catalogerName).Trace("package cataloger completed")

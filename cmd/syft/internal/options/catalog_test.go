@@ -3,8 +3,12 @@ package options
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/anchore/clio"
+	"github.com/anchore/syft/syft/cataloging"
 )
 
 func TestCatalog_PostLoad(t *testing.T) {
@@ -34,6 +38,21 @@ func TestCatalog_PostLoad(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestProgress_isDisabledByDefaultAndConfigurable(t *testing.T) {
+	cfg := DefaultCatalog()
+	assert.False(t, cfg.Progress.Enabled)
+
+	sbomCfg := cfg.ToSBOMConfig(clio.Identification{Name: "test", Version: "1"})
+	assert.False(t, sbomCfg.Progress.Enabled)
+	assert.Equal(t, cataloging.DefaultProgressInterval, sbomCfg.Progress.Interval)
+
+	cfg.Progress.Enabled = true
+	cfg.Progress.IntervalSeconds = 7
+	sbomCfg = cfg.ToSBOMConfig(clio.Identification{Name: "test", Version: "1"})
+	assert.True(t, sbomCfg.Progress.Enabled)
+	assert.Equal(t, 7*time.Second, sbomCfg.Progress.Interval)
 }
 
 func TestFlatten(t *testing.T) {

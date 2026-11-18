@@ -14,6 +14,7 @@ import (
 	"github.com/anchore/syft/internal/bus"
 	"github.com/anchore/syft/internal/licenses"
 	"github.com/anchore/syft/internal/log"
+	"github.com/anchore/syft/internal/progress"
 	"github.com/anchore/syft/internal/sbomsync"
 	"github.com/anchore/syft/internal/task"
 	"github.com/anchore/syft/internal/tmpdir"
@@ -88,6 +89,16 @@ func CreateSBOM(ctx context.Context, src source.Source, cfg *CreateSBOMConfig) (
 				}
 			}()
 		}
+	}
+
+	if cfg.Progress.Enabled {
+		var reporter *progress.Reporter
+		ctx, reporter = progress.Start(ctx, progress.Config{
+			Interval: cfg.Progress.Interval,
+			Sink:     cfg.Progress.Sink,
+		})
+		defer reporter.Finish()
+		reporter.Expect(taskCount(taskGroups))
 	}
 
 	catalogingProgress := monitorCatalogingTask(ctx, src.ID(), taskGroups)
@@ -208,12 +219,15 @@ func monitorCatalogingTask(ctx context.Context, srcID artifact.ID, tasks [][]tas
 		HideOnSuccess: false,
 	}
 
-	var length int64
-	for _, tg := range tasks {
-		length += int64(len(tg))
-	}
+	return bus.StartCatalogerTask(ctx, info, taskCount(tasks), "")
+}
 
-	return bus.StartCatalogerTask(ctx, info, length, "")
+func taskCount(tasks [][]task.Task) int64 {
+	var count int64
+	for _, group := range tasks {
+		count += int64(len(group))
+	}
+	return count
 }
 
 func formatTaskNames(tasks []task.Task) []string {
