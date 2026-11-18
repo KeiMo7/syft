@@ -11,6 +11,7 @@ import (
 	"github.com/anchore/syft/internal/task"
 	"github.com/anchore/syft/syft/cataloging"
 	"github.com/anchore/syft/syft/cataloging/filecataloging"
+	"github.com/anchore/syft/syft/cataloging/incremental"
 	"github.com/anchore/syft/syft/cataloging/pkgcataloging"
 	"github.com/anchore/syft/syft/file"
 	"github.com/anchore/syft/syft/sbom"
@@ -31,6 +32,7 @@ type CreateSBOMConfig struct {
 	Archive            cataloging.ArchiveSearchConfig
 	Parallelism        int
 	CatalogerSelection cataloging.SelectionRequest
+	Incremental        *incremental.Config
 
 	// audit what tool is being used to generate the SBOM
 	ToolName          string
@@ -39,6 +41,14 @@ type CreateSBOMConfig struct {
 
 	packageTaskFactories       task.Factories
 	packageCatalogerReferences []pkgcataloging.CatalogerReference
+	onSBOMWrite                func(*sbom.SBOM)
+}
+
+// WithIncrementalConfig enables or configures incremental cataloging. The
+// capability is disabled unless Enabled is explicitly set.
+func (c *CreateSBOMConfig) WithIncrementalConfig(cfg incremental.Config) *CreateSBOMConfig {
+	c.Incremental = &cfg
+	return c
 }
 
 func DefaultCreateSBOMConfig() *CreateSBOMConfig {

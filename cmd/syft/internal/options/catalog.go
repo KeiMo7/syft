@@ -16,6 +16,7 @@ import (
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/cataloging"
 	"github.com/anchore/syft/syft/cataloging/filecataloging"
+	"github.com/anchore/syft/syft/cataloging/incremental"
 	"github.com/anchore/syft/syft/cataloging/pkgcataloging"
 	"github.com/anchore/syft/syft/file/cataloger/executable"
 	"github.com/anchore/syft/syft/file/cataloger/filecontent"
@@ -43,6 +44,7 @@ type Catalog struct {
 	Relationships relationshipsConfig `yaml:"relationships" json:"relationships" mapstructure:"relationships"`
 	Compliance    complianceConfig    `yaml:"compliance" json:"compliance" mapstructure:"compliance"`
 	Enrich        []string            `yaml:"enrich" json:"enrich" mapstructure:"enrich"`
+	Incremental   incrementalConfig   `yaml:"incremental" json:"incremental" mapstructure:"incremental"`
 
 	// ecosystem-specific cataloger configuration
 	Cpp         cppConfig         `yaml:"cpp" json:"cpp" mapstructure:"cpp"`
@@ -63,6 +65,14 @@ type Catalog struct {
 
 	// configuration for inclusion of unknown information within elements
 	Unknowns unknownsConfig `yaml:"unknowns" mapstructure:"unknowns"`
+}
+
+type incrementalConfig struct {
+	Enabled              bool   `yaml:"enabled" json:"enabled" mapstructure:"enabled"`
+	Baseline             string `yaml:"baseline" json:"baseline" mapstructure:"baseline"`
+	Checkpoint           string `yaml:"checkpoint" json:"checkpoint" mapstructure:"checkpoint"`
+	ForceFull            bool   `yaml:"force-full" json:"force-full" mapstructure:"force-full"`
+	AllowDifferentSource bool   `yaml:"allow-different-source" json:"allow-different-source" mapstructure:"allow-different-source"`
 }
 
 var _ interface {
@@ -106,11 +116,22 @@ func (cfg Catalog) ToSBOMConfig(id clio.Identification) *syft.CreateSBOMConfig {
 		WithPackagesConfig(cfg.ToPackagesConfig()).
 		WithLicenseConfig(cfg.ToLicenseConfig()).
 		WithFilesConfig(cfg.ToFilesConfig()).
+		WithIncrementalConfig(cfg.ToIncrementalConfig()).
 		WithCatalogerSelection(
 			cataloging.NewSelectionRequest().
 				WithDefaults(cfg.DefaultCatalogers...).
 				WithExpression(cfg.SelectCatalogers...),
 		)
+}
+
+func (cfg Catalog) ToIncrementalConfig() incremental.Config {
+	return incremental.Config{
+		Enabled:              cfg.Incremental.Enabled,
+		BaselinePath:         cfg.Incremental.Baseline,
+		CheckpointPath:       cfg.Incremental.Checkpoint,
+		ForceFull:            cfg.Incremental.ForceFull,
+		AllowDifferentSource: cfg.Incremental.AllowDifferentSource,
+	}
 }
 
 func (cfg Catalog) ToSearchConfig() cataloging.SearchConfig {
@@ -265,6 +286,21 @@ func (cfg *Catalog) AddFlags(flags clio.FlagSet) {
 
 	flags.StringVarP(&cfg.Source.Supplier, "source-supplier", "",
 		"the organization that supplied the component, which often may be the manufacturer, distributor, or repackager")
+
+	flags.BoolVarP(&cfg.Incremental.Enabled, "incremental", "",
+		"reuse unchanged components from a reference SBOM and catalog only changed paths")
+
+	flags.StringVarP(&cfg.Incremental.Baseline, "incremental-baseline", "",
+		"path to the reference syft-json SBOM used for incremental cataloging")
+
+	flags.StringVarP(&cfg.Incremental.Checkpoint, "incremental-checkpoint", "",
+		"path for atomic incremental checkpoints that can be resumed after an interrupted scan")
+
+	flags.BoolVarP(&cfg.Incremental.ForceFull, "incremental-force-full", "",
+		"disable reuse and perform a full catalog even when incremental mode is enabled")
+
+	flags.BoolVarP(&cfg.Incremental.AllowDifferentSource, "incremental-allow-different-source", "",
+		"allow using a reference SBOM even when its source identity differs (use only for known mirrors)")
 }
 
 func (cfg *Catalog) DescribeFields(descriptions fangs.FieldDescriptionSet) {
