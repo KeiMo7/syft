@@ -30,6 +30,7 @@ import (
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/anchore/syft/syft/source"
 	"github.com/anchore/syft/syft/source/sourceproviders"
+	"github.com/anchore/syft/syft/timeline"
 )
 
 const (
@@ -73,7 +74,8 @@ type scanOptions struct {
 	options.Output      `yaml:",inline" mapstructure:",squash"`
 	options.UpdateCheck `yaml:",inline" mapstructure:",squash"`
 	options.Catalog     `yaml:",inline" mapstructure:",squash"`
-	Cache               options.Cache `json:"-" yaml:"cache" mapstructure:"cache"`
+	Timeline            options.Timeline `yaml:"timeline" json:"timeline" mapstructure:"timeline"`
+	Cache               options.Cache    `json:"-" yaml:"cache" mapstructure:"cache"`
 }
 
 func defaultScanOptions() *scanOptions {
@@ -81,6 +83,7 @@ func defaultScanOptions() *scanOptions {
 		Output:      options.DefaultOutput(),
 		UpdateCheck: options.DefaultUpdateCheck(),
 		Catalog:     options.DefaultCatalog(),
+		Timeline:    options.DefaultTimeline(),
 		Cache:       options.DefaultCache(),
 	}
 }
@@ -111,6 +114,13 @@ func Scan(app clio.Application) *cobra.Command {
 
 func (o *scanOptions) PostLoad() error {
 	return o.validateLegacyOptionsNotUsed()
+}
+
+// AddFlags adds the scan-specific flags. The history directory is exposed as --timeline-dir; the
+// rest of the timeline settings are configuration-only.
+func (o *scanOptions) AddFlags(flags clio.FlagSet) {
+	flags.StringVarP(&o.Timeline.Dir, "timeline-dir", "",
+		"record each scan in an append-only history under this directory (disabled when unset)")
 }
 
 func (o *scanOptions) validateLegacyOptionsNotUsed() error {
@@ -221,6 +231,16 @@ func runScan(ctx context.Context, id clio.Identification, opts *scanOptions, use
 
 	if err := writer.Write(*s); err != nil {
 		return fmt.Errorf("failed to write SBOM: %w", err)
+	}
+
+	// The history is a side channel recorded after the SBOM output has been written, at the one
+	// point where a complete scan result exists. It is opt-in: when no directory is configured the
+	// recorder is a no-op, no extra file is created, and the scan result and exit code are
+	// unchanged. A history failure is reported as a warning rather than failing the scan.
+	if opts.Timeline.Enabled() {
+		timeline.NewRecorder(opts.Timeline.Dir, func(err error) {
+			log.Warnf("SBOM timeline was not updated: %v", err)
+		}).Record(*s)
 	}
 
 	return nil
