@@ -42,9 +42,10 @@ func toSyftModel(doc model.Document) *sbom.SBOM {
 			Unknowns:          fileArtifacts.Unknowns,
 			LinuxDistribution: toInternalLinuxRelease(doc.Distro),
 		},
-		Source:        *toSyftSourceData(doc.Source),
-		Descriptor:    toSyftDescriptor(doc.Descriptor),
-		Relationships: warnConversionErrors(toSyftRelationships(&doc, catalog, doc.ArtifactRelationships, idAliases)),
+		Source:              *toSyftSourceData(doc.Source),
+		Descriptor:          toSyftDescriptor(doc.Descriptor),
+		IdentityMergeReport: doc.IdentityMerge,
+		Relationships:       warnConversionErrors(toSyftRelationships(&doc, catalog, doc.ArtifactRelationships, idAliases)),
 	}
 }
 
@@ -357,6 +358,7 @@ func toSyftPackage(p model.Package, idAliases map[string]string) pkg.Package {
 		Type:      p.Type,
 		CPEs:      cpes,
 		PURL:      p.PURL,
+		MergeInfo: p.MergeInfo,
 		Metadata:  p.Metadata,
 	}
 

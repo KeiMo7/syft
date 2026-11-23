@@ -3,6 +3,8 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/anchore/syft/syft/pkg/identity"
 )
 
 // Field order matters: encoding/json writes struct fields in declaration order, and Schema must remain the last
@@ -21,7 +23,12 @@ type Document struct {
 	Source                Source         `json:"source"`          // Source represents the original object that was cataloged
 	Distro                LinuxRelease   `json:"distro"`          // Distro represents the Linux distribution that was detected from the source
 	Descriptor            Descriptor     `json:"descriptor"`      // Descriptor is a block containing self-describing information about syft
-	Schema                Schema         `json:"schema"`          // Schema is a block reserved for defining the version for the shape of this JSON document and where to find the schema document to validate the shape
+	// IdentityMerge is the account of how duplicate package records were folded by component
+	// identity. It is omitted when identity merging did not run, so the document shape is
+	// unchanged for every existing consumer.
+	IdentityMerge *identity.MergeReport `json:"identityMerge,omitempty"`
+	// Schema is a block reserved for defining the version for the shape of this JSON document and where to find the schema document to validate the shape.
+	Schema Schema `json:"schema"`
 }
 
 func (d *Document) UnmarshalJSON(data []byte) error {

@@ -62,6 +62,7 @@ func CreateSBOM(ctx context.Context, src source.Source, cfg *CreateSBOMConfig) (
 				Files:          cfg.Files,
 				Archive:        cfg.Archive,
 				Licenses:       cfg.Licenses,
+				IdentityMerge:  cfg.IdentityMerge,
 				Catalogers:     *audit,
 				ExtraConfigs:   cfg.ToolConfiguration,
 			},

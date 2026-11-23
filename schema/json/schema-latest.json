@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "anchore.io/schema/syft/json/16.1.13/document",
+  "$id": "anchore.io/schema/syft/json/16.1.14/document",
   "$ref": "#/$defs/Document",
   "$defs": {
     "AlpmDbEntry": {
@@ -712,6 +712,35 @@
       ],
       "description": "CondaPathsData represents the paths.json file structure from a Conda package containing file metadata."
     },
+    "Conflict": {
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "resolution": {
+          "type": "string"
+        },
+        "rule": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "field",
+        "values",
+        "resolution"
+      ],
+      "description": "Conflict records a field whose values disagreed across merged records."
+    },
     "Coordinates": {
       "properties": {
         "path": {
@@ -798,6 +827,26 @@
       },
       "type": "object",
       "description": "CpanUnpackedRelease describes an unpacked CPAN release found on disk, read from the release's own META.json or META.yml."
+    },
+    "CrossReference": {
+      "properties": {
+        "leftID": {
+          "type": "string"
+        },
+        "rightID": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "leftID",
+        "rightID",
+        "reason"
+      ],
+      "description": "CrossReference links two entries that name the same component but belong to different package types."
     },
     "DartPubspec": {
       "properties": {
@@ -991,9 +1040,13 @@
           "$ref": "#/$defs/Descriptor",
           "description": "Descriptor is a block containing self-describing information about syft"
         },
+        "identityMerge": {
+          "$ref": "#/$defs/MergeReport",
+          "description": "IdentityMerge is the account of how duplicate package records were folded by component\nidentity. It is omitted when identity merging did not run, so the document shape is\nunchanged for every existing consumer."
+        },
         "schema": {
           "$ref": "#/$defs/Schema",
-          "description": "Schema is a block reserved for defining the version for the shape of this JSON document and where to find the schema document to validate the shape"
+          "description": "Schema is a block reserved for defining the version for the shape of this JSON document and where to find the schema document to validate the shape."
         }
       },
       "type": "object",
@@ -1805,6 +1858,89 @@
         "cgoEnabled"
       ],
       "description": "GolangSourceEntry represents all captured data for a Golang package found through source analysis"
+    },
+    "Group": {
+      "properties": {
+        "identity": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "normalizedName": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "versionValues": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "rules": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "matches": {
+          "items": {
+            "$ref": "#/$defs/Match"
+          },
+          "type": "array"
+        },
+        "members": {
+          "items": {
+            "$ref": "#/$defs/MemberSummary"
+          },
+          "type": "array"
+        },
+        "mergedID": {
+          "type": "string"
+        },
+        "conflicts": {
+          "items": {
+            "$ref": "#/$defs/Conflict"
+          },
+          "type": "array"
+        },
+        "sources": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "locationCount": {
+          "type": "integer"
+        },
+        "state": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "identity",
+        "type",
+        "name",
+        "normalizedName",
+        "version",
+        "versionValues",
+        "rules",
+        "members",
+        "mergedID",
+        "sources",
+        "locationCount",
+        "state"
+      ],
+      "description": "Group is one component identity with the records that were folded into it."
     },
     "HaskellHackageStackEntry": {
       "properties": {
@@ -2648,6 +2784,360 @@
       ],
       "description": "LuaRocksPackage represents a Lua package managed by the LuaRocks package manager with metadata from .rockspec files."
     },
+    "Match": {
+      "properties": {
+        "left": {
+          "type": "string"
+        },
+        "right": {
+          "type": "string"
+        },
+        "rules": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "required": [
+        "left",
+        "right",
+        "rules"
+      ],
+      "description": "Match records that two member records were judged the same, and the rules that made them equal."
+    },
+    "MemberSummary": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "purl": {
+          "type": "string"
+        },
+        "foundBy": {
+          "type": "string"
+        },
+        "metadataType": {
+          "type": "string"
+        },
+        "locationCount": {
+          "type": "integer"
+        }
+      },
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "version",
+        "type",
+        "locationCount"
+      ],
+      "description": "MemberSummary is the per-record view retained in the report."
+    },
+    "MergeChecksum": {
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "description": "Algorithm is the hash algorithm (e.g. \"sha256\")."
+        },
+        "value": {
+          "type": "string",
+          "description": "Value is the digest string."
+        },
+        "source": {
+          "type": "string",
+          "description": "Source is the clue that supplied the digest (usually a cataloger name)."
+        }
+      },
+      "type": "object",
+      "required": [
+        "algorithm",
+        "value"
+      ],
+      "description": "MergeChecksum is a content digest retained from a merged source record."
+    },
+    "MergeConflict": {
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "Field is the package field that conflicted (e.g. \"version\", \"checksum:sha256\")."
+        },
+        "values": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "Values holds every distinct value, sorted."
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Resolution is one of \"kept-both\", \"selected-deterministically\" or \"unresolved\"."
+        },
+        "rule": {
+          "type": "string",
+          "description": "Rule is the identity rule that explains the conflict."
+        },
+        "note": {
+          "type": "string",
+          "description": "Note is a human-readable explanation for a reviewer."
+        }
+      },
+      "type": "object",
+      "required": [
+        "field",
+        "values",
+        "resolution"
+      ],
+      "description": "MergeConflict records a field whose values disagreed across the source records that were folded into one package entry."
+    },
+    "MergeExternalID": {
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type is the identifier family (e.g. \"purl\", \"cpe\")."
+        },
+        "value": {
+          "type": "string",
+          "description": "Value is the identifier."
+        },
+        "source": {
+          "type": "string",
+          "description": "Source is the clue that supplied the identifier."
+        }
+      },
+      "type": "object",
+      "required": [
+        "type",
+        "value"
+      ],
+      "description": "MergeExternalID is an identifier supplied by another system (purl, CPE, ...) retained from a merged source record."
+    },
+    "MergeInfo": {
+      "properties": {
+        "state": {
+          "type": "string",
+          "description": "State is \"merged\", \"needs-confirmation\" or \"unique\"."
+        },
+        "identity": {
+          "type": "string",
+          "description": "Identity is the normalized identity the entry was grouped under."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace is the normalized namespace prefix, if any."
+        },
+        "versions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "Versions holds every raw version spelling that was folded together."
+        },
+        "sources": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "Sources holds every cataloger that contributed evidence, sorted."
+        },
+        "rules": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "Rules lists the identity rules that were applied, sorted."
+        },
+        "members": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "Members holds the IDs of the source records, sorted."
+        },
+        "metadataTypes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "MetadataTypes holds every metadata payload type that was folded together."
+        },
+        "metadataPayloads": {
+          "items": {
+            "$ref": "#/$defs/MergeMetadata"
+          },
+          "type": "array",
+          "description": "MetadataPayloads holds every source metadata payload, sorted by member ID."
+        },
+        "checksums": {
+          "items": {
+            "$ref": "#/$defs/MergeChecksum"
+          },
+          "type": "array",
+          "description": "Checksums holds every content digest the sources reported."
+        },
+        "externalIdentifiers": {
+          "items": {
+            "$ref": "#/$defs/MergeExternalID"
+          },
+          "type": "array",
+          "description": "ExternalIdentifiers holds every identifier the sources reported."
+        },
+        "crossReferences": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "CrossReferences holds IDs of entries that name the same component under a different package\ntype. They are deliberately not merged."
+        },
+        "conflicts": {
+          "items": {
+            "$ref": "#/$defs/MergeConflict"
+          },
+          "type": "array",
+          "description": "Conflicts records every disagreement that was surfaced rather than silently resolved."
+        },
+        "locationCount": {
+          "type": "integer",
+          "description": "LocationCount, LicenseCount and ChecksumCount let a reviewer see, without expanding the\nentry, how much evidence the merge retained."
+        },
+        "licenseCount": {
+          "type": "integer"
+        },
+        "checksumCount": {
+          "type": "integer"
+        }
+      },
+      "type": "object",
+      "required": [
+        "state",
+        "identity",
+        "locationCount",
+        "licenseCount",
+        "checksumCount"
+      ],
+      "description": "MergeInfo records why a package entry looks the way it does after identity merging."
+    },
+    "MergeMetadata": {
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type is the metadata JSON type name."
+        },
+        "payload": {
+          "description": "Payload is the original metadata payload."
+        }
+      },
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "description": "MergeMetadata retains a source record's metadata payload when several records were folded into one entry, so the representative metadata field does not become the only surviving payload."
+    },
+    "MergeReport": {
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "generatedBy": {
+          "type": "string"
+        },
+        "inputCount": {
+          "type": "integer"
+        },
+        "outputCount": {
+          "type": "integer"
+        },
+        "mergePairCount": {
+          "type": "integer"
+        },
+        "mergedCount": {
+          "type": "integer"
+        },
+        "uniqueCount": {
+          "type": "integer"
+        },
+        "groupCount": {
+          "type": "integer"
+        },
+        "conflictCount": {
+          "type": "integer"
+        },
+        "pendingCount": {
+          "type": "integer"
+        },
+        "crossReferenceCount": {
+          "type": "integer"
+        },
+        "conflictThreshold": {
+          "type": "integer"
+        },
+        "thresholdExceeded": {
+          "type": "boolean"
+        },
+        "warning": {
+          "type": "string"
+        },
+        "rules": {
+          "items": {
+            "$ref": "#/$defs/Rule"
+          },
+          "type": "array"
+        },
+        "groups": {
+          "items": {
+            "$ref": "#/$defs/Group"
+          },
+          "type": "array"
+        },
+        "standalone": {
+          "items": {
+            "$ref": "#/$defs/Standalone"
+          },
+          "type": "array"
+        },
+        "crossReferences": {
+          "items": {
+            "$ref": "#/$defs/CrossReference"
+          },
+          "type": "array"
+        },
+        "reconciliation": {
+          "$ref": "#/$defs/Reconciliation"
+        }
+      },
+      "type": "object",
+      "required": [
+        "version",
+        "inputCount",
+        "outputCount",
+        "mergePairCount",
+        "mergedCount",
+        "uniqueCount",
+        "groupCount",
+        "conflictCount",
+        "pendingCount",
+        "crossReferenceCount",
+        "conflictThreshold",
+        "thresholdExceeded",
+        "rules",
+        "groups",
+        "standalone",
+        "crossReferences",
+        "reconciliation"
+      ],
+      "description": "MergeReport is the complete, deterministic account of one merge run."
+    },
     "MicrosoftKbPatch": {
       "properties": {
         "product_id": {
@@ -2829,6 +3319,10 @@
         },
         "purl": {
           "type": "string"
+        },
+        "mergeInfo": {
+          "$ref": "#/$defs/MergeInfo",
+          "description": "MergeInfo describes how this entry was produced by identity merging. It is omitted for\npackages that were never merged, so existing documents and consumers are unaffected."
         },
         "metadataType": {
           "type": "string"
@@ -3956,6 +4450,34 @@
       "type": "object",
       "description": "RDescription represents metadata from an R package DESCRIPTION file containing package information, dependencies, and author details."
     },
+    "Reconciliation": {
+      "properties": {
+        "inputCount": {
+          "type": "integer"
+        },
+        "mergePairCount": {
+          "type": "integer"
+        },
+        "outputCount": {
+          "type": "integer"
+        },
+        "balanced": {
+          "type": "boolean"
+        },
+        "formula": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "inputCount",
+        "mergePairCount",
+        "outputCount",
+        "balanced",
+        "formula"
+      ],
+      "description": "Reconciliation proves the count arithmetic: input records minus the number of fold-away records equals output entries."
+    },
     "Relationship": {
       "properties": {
         "parent": {
@@ -4265,6 +4787,22 @@
       ],
       "description": "RubyGemspec represents all metadata parsed from the *.gemspec file"
     },
+    "Rule": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "id",
+        "description"
+      ],
+      "description": "Rule documents a rule identifier used anywhere in the report, so the report is self-describing to a reviewer who has never read the code."
+    },
     "RustCargoAuditEntry": {
       "properties": {
         "name": {
@@ -4459,6 +4997,44 @@
         "metadata"
       ],
       "description": "Source represents the artifact that was analyzed to generate this SBOM, such as a container image, directory, or file archive."
+    },
+    "Standalone": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "conflicts": {
+          "items": {
+            "$ref": "#/$defs/Conflict"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "version",
+        "type",
+        "reason",
+        "state"
+      ],
+      "description": "Standalone describes an entry that was deliberately kept separate."
     },
     "SwiftPackageManagerLockEntry": {
       "properties": {

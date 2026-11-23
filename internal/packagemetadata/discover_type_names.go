@@ -20,6 +20,11 @@ var knownNonMetadataTypeNames = strset.New(
 	"Collection",
 	"License",
 	"LicenseSet",
+	"MergeInfo",
+	"MergeConflict",
+	"MergeChecksum",
+	"MergeExternalID",
+	"MergeMetadata",
 )
 
 // these are names that would be removed due to common convention (e.g. used within another metadata type) but are

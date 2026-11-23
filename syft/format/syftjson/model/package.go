@@ -34,6 +34,10 @@ type PackageBasicData struct {
 	Language  pkg.Language    `json:"language"`
 	CPEs      cpes            `json:"cpes"`
 	PURL      string          `json:"purl"`
+
+	// MergeInfo describes how this entry was produced by identity merging. It is omitted for
+	// packages that were never merged, so existing documents and consumers are unaffected.
+	MergeInfo *pkg.MergeInfo `json:"mergeInfo,omitempty"`
 }
 
 // cpes is a collection of Common Platform Enumeration identifiers for a package.

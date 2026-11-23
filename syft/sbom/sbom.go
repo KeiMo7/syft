@@ -9,6 +9,7 @@ import (
 	"github.com/anchore/syft/syft/file"
 	"github.com/anchore/syft/syft/linux"
 	"github.com/anchore/syft/syft/pkg"
+	"github.com/anchore/syft/syft/pkg/identity"
 	"github.com/anchore/syft/syft/source"
 )
 
@@ -17,6 +18,11 @@ type SBOM struct {
 	Relationships []artifact.Relationship
 	Source        source.Description
 	Descriptor    Descriptor
+
+	// IdentityMergeReport describes how duplicate package records were folded by component
+	// identity. It is nil when identity merging did not run, which keeps it out of the output for
+	// every existing consumer.
+	IdentityMergeReport *identity.MergeReport
 }
 
 type Artifacts struct {

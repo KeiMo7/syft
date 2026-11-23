@@ -39,6 +39,7 @@ func ToFormatModel(s sbom.SBOM, cfg EncoderConfig) model.Document {
 	return model.Document{
 		Artifacts:             toPackageModels(s.Artifacts.Packages, locationSorter, cfg),
 		ArtifactRelationships: toRelationshipModel(s.Relationships),
+		IdentityMerge:         s.IdentityMergeReport,
 		Files:                 toFile(s, coordinateSorter),
 		Source:                toSourceModel(s.Source),
 		Distro:                toLinuxRelease(s.Artifacts.LinuxDistribution),
@@ -276,6 +277,7 @@ func toPackageModel(p pkg.Package, locationSorter func(a, b file.Location) int, 
 			Language:  p.Language,
 			CPEs:      cpes,
 			PURL:      p.PURL,
+			MergeInfo: p.MergeInfo,
 		},
 		PackageCustomData: model.PackageCustomData{
 			MetadataType: metadataType(p.Metadata, cfg.Legacy),

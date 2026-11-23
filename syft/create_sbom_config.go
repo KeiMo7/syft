@@ -29,6 +29,7 @@ type CreateSBOMConfig struct {
 	Licenses           cataloging.LicenseConfig
 	Files              filecataloging.Config
 	Archive            cataloging.ArchiveSearchConfig
+	IdentityMerge      cataloging.IdentityMergeConfig
 	Parallelism        int
 	CatalogerSelection cataloging.SelectionRequest
 
@@ -51,6 +52,7 @@ func DefaultCreateSBOMConfig() *CreateSBOMConfig {
 		Licenses:             cataloging.DefaultLicenseConfig(),
 		Files:                filecataloging.DefaultConfig(),
 		Archive:              cataloging.DefaultArchiveSearchConfig(),
+		IdentityMerge:        cataloging.DefaultIdentityMergeConfig(),
 		Parallelism:          0, // use default: run in parallel based on number of CPUs
 		packageTaskFactories: task.DefaultPackageTaskFactories(),
 
@@ -146,6 +148,13 @@ func (c *CreateSBOMConfig) WithFilesConfig(cfg filecataloging.Config) *CreateSBO
 	return c
 }
 
+// WithIdentityMergeConfig sets whether duplicate package records are folded by component identity
+// after cataloging, and how conflicts are reported.
+func (c *CreateSBOMConfig) WithIdentityMergeConfig(cfg cataloging.IdentityMergeConfig) *CreateSBOMConfig {
+	c.IdentityMerge = cfg
+	return c
+}
+
 // WithArchiveConfig sets how archives are cataloged: how deep to recurse into nested archives (MaxDepth
 // 0, the default, does not recurse) and how much extracted content the scan may hold at once.
 func (c *CreateSBOMConfig) WithArchiveConfig(cfg cataloging.ArchiveSearchConfig) *CreateSBOMConfig {
@@ -217,6 +226,7 @@ func (c *CreateSBOMConfig) makeTaskGroups(src source.Description, exclusions []s
 	if archiveTask != nil {
 		unknowns.IncludeUnexpandedArchives = false
 	}
+	identityMergeTask := c.identityMergeTasks()
 	unknownTasks := unknownsTasks(unknowns)
 
 	// combine the user-provided and configured tasks
@@ -234,20 +244,11 @@ func (c *CreateSBOMConfig) makeTaskGroups(src source.Description, exclusions []s
 		taskGroups = append(taskGroups, append(pkgTasks, fileTasks...))
 	}
 
-	// all scope work must be done after all nodes (files and packages) have been cataloged and before the relationship
-	if len(scopeTasks) > 0 {
-		taskGroups = append(taskGroups, scopeTasks)
-	}
-
-	// all relationship work must be done after all nodes (files and packages) have been cataloged
-	if len(relationshipsTasks) > 0 {
-		taskGroups = append(taskGroups, relationshipsTasks)
-	}
-
-	// all unknowns tasks should happen after all scanning is complete
-	if len(unknownTasks) > 0 {
-		taskGroups = append(taskGroups, unknownTasks)
-	}
+	// post-processing groups run in this order after every node and relationship is cataloged:
+	// scope cleanup, relationship construction, identity merging (which rewrites packages and
+	// package-to-package relationships, so it follows relationships and precedes unknowns), and
+	// unknowns labeling (which reads the final package set).
+	taskGroups = appendNonEmptyGroups(taskGroups, scopeTasks, relationshipsTasks, identityMergeTask, unknownTasks)
 
 	// osFeatureDetectionTasks should happen after package scanning is complete
 	if len(osFeatureDetectionTasks) > 0 {
@@ -362,6 +363,16 @@ func (c *CreateSBOMConfig) selectTasks(src source.Description) ([]task.Task, []t
 	return finalPkgTasks, finalFileTasks, &selection, nil
 }
 
+// appendNonEmptyGroups appends each non-empty group to taskGroups in order.
+func appendNonEmptyGroups(groups [][]task.Task, candidates ...[]task.Task) [][]task.Task {
+	for _, candidate := range candidates {
+		if len(candidate) > 0 {
+			groups = append(groups, candidate)
+		}
+	}
+	return groups
+}
+
 func deprecatedTasks(taskGroups [][]task.Task) []string {
 	// we want to identify any deprecated catalogers that are being used but default selections will always additionally select `file`
 	// catalogers. For this reason, we must explicitly remove `file` catalogers in the selection request. This means if we
@@ -449,6 +460,14 @@ func (c *CreateSBOMConfig) scopeTasks() []task.Task {
 		}
 	}
 	return tsks
+}
+
+// identityMergeTasks returns the identity merge task when the feature is enabled.
+func (c *CreateSBOMConfig) identityMergeTasks() []task.Task {
+	if t := task.NewIdentityMergeTask(c.IdentityMerge); t != nil {
+		return []task.Task{t}
+	}
+	return nil
 }
 
 // relationshipTasks returns the set of tasks that should be run to generate additional relationships as well as

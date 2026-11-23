@@ -1,0 +1,2877 @@
+[
+  {
+    "name": "same component from three clues with equivalent version spellings",
+    "input": [
+      {
+        "id": "pkg-a",
+        "name": "Django",
+        "version": "4.2.0",
+        "type": "python",
+        "foundBy": "python-package-cataloger",
+        "locations": [
+          {
+            "path": "/site-packages/Django-4.2.0.dist-info/METADATA",
+            "accessPath": "/site-packages/Django-4.2.0.dist-info/METADATA"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-b",
+        "name": "django",
+        "version": "v4.2",
+        "type": "python",
+        "foundBy": "python-installed-package-cataloger",
+        "locations": [
+          {
+            "path": "/site-packages/django/__init__.py",
+            "accessPath": "/site-packages/django/__init__.py"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-c",
+        "name": "DJANGO",
+        "version": "4.2",
+        "type": "python",
+        "foundBy": "binary-classifier-cataloger",
+        "locations": [
+          {
+            "path": "/usr/bin/python3",
+            "accessPath": "/usr/bin/python3"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      }
+    ],
+    "report": {
+      "version": "identity-merge/v1",
+      "inputCount": 3,
+      "outputCount": 1,
+      "mergePairCount": 2,
+      "mergedCount": 1,
+      "uniqueCount": 0,
+      "groupCount": 1,
+      "conflictCount": 0,
+      "pendingCount": 0,
+      "crossReferenceCount": 0,
+      "conflictThreshold": 1000,
+      "thresholdExceeded": false,
+      "rules": [
+        {
+          "id": "checksum.conflict",
+          "description": "records of the same component carry different checksums for one algorithm; both are retained"
+        },
+        {
+          "id": "identity.insufficient",
+          "description": "a record is missing name or type; it cannot participate in a merge"
+        },
+        {
+          "id": "name.case-fold",
+          "description": "package names differ only in letter case"
+        },
+        {
+          "id": "name.exact",
+          "description": "package names are identical"
+        },
+        {
+          "id": "name.mismatch",
+          "description": "package names do not normalize to the same value"
+        },
+        {
+          "id": "name.namespace-fold",
+          "description": "package names carry the same namespace in different spellings (e.g. '@scope/name' and 'scope/name')"
+        },
+        {
+          "id": "name.separator-fold",
+          "description": "package names differ only in runs of '-', '_' or '.'"
+        },
+        {
+          "id": "purl.agrees",
+          "description": "the package URL agrees with the name and version of the record"
+        },
+        {
+          "id": "purl.disagrees",
+          "description": "the package URL names a different component than the package fields; merge is refused"
+        },
+        {
+          "id": "type.distinct-no-merge",
+          "description": "records name the same component but belong to different package types; they are cross-referenced instead of merged"
+        },
+        {
+          "id": "type.exact",
+          "description": "package types are identical; different types are never merged"
+        },
+        {
+          "id": "type.mismatch",
+          "description": "records have different package types"
+        },
+        {
+          "id": "version.exact",
+          "description": "package versions are identical"
+        },
+        {
+          "id": "version.mismatch",
+          "description": "package versions belong to different version classes"
+        },
+        {
+          "id": "version.missing",
+          "description": "at least one record has no version; the identity cannot be confirmed"
+        },
+        {
+          "id": "version.revision-variant",
+          "description": "package versions differ only by the package-manager revision (e.g. '1.2.3-1' and '1.2.3'); both values are retained"
+        },
+        {
+          "id": "version.semver-canonical",
+          "description": "package versions are the same semantic version in different spellings (e.g. 'v1.2' and '1.2.0')"
+        }
+      ],
+      "groups": [
+        {
+          "identity": "python||django|4.2.0",
+          "type": "python",
+          "name": "DJANGO",
+          "normalizedName": "django",
+          "version": "4.2.0",
+          "versionValues": [
+            "4.2",
+            "4.2.0",
+            "v4.2"
+          ],
+          "rules": [
+            "name.case-fold",
+            "type.exact",
+            "version.semver-canonical"
+          ],
+          "matches": [
+            {
+              "left": "pkg-c",
+              "right": "pkg-a",
+              "rules": [
+                "name.case-fold",
+                "version.semver-canonical"
+              ]
+            },
+            {
+              "left": "pkg-c",
+              "right": "pkg-b",
+              "rules": [
+                "name.case-fold",
+                "version.semver-canonical"
+              ]
+            }
+          ],
+          "members": [
+            {
+              "id": "pkg-a",
+              "name": "Django",
+              "version": "4.2.0",
+              "type": "python",
+              "foundBy": "python-package-cataloger",
+              "locationCount": 1
+            },
+            {
+              "id": "pkg-b",
+              "name": "django",
+              "version": "v4.2",
+              "type": "python",
+              "foundBy": "python-installed-package-cataloger",
+              "locationCount": 1
+            },
+            {
+              "id": "pkg-c",
+              "name": "DJANGO",
+              "version": "4.2",
+              "type": "python",
+              "foundBy": "binary-classifier-cataloger",
+              "locationCount": 1
+            }
+          ],
+          "mergedID": "2ea01cd1e99f062f",
+          "sources": [
+            "binary-classifier-cataloger",
+            "python-installed-package-cataloger",
+            "python-package-cataloger"
+          ],
+          "locationCount": 3,
+          "state": "merged"
+        }
+      ],
+      "standalone": [],
+      "crossReferences": [],
+      "reconciliation": {
+        "inputCount": 3,
+        "mergePairCount": 2,
+        "outputCount": 1,
+        "balanced": true,
+        "formula": "inputCount - mergePairCount = outputCount"
+      }
+    },
+    "components": [
+      {
+        "id": "2ea01cd1e99f062f",
+        "identity": "python||django|4.2.0",
+        "type": "python",
+        "name": "DJANGO",
+        "version": "4.2.0",
+        "versions": [
+          "4.2",
+          "4.2.0",
+          "v4.2"
+        ],
+        "sources": [
+          "binary-classifier-cataloger",
+          "python-installed-package-cataloger",
+          "python-package-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/site-packages/Django-4.2.0.dist-info/METADATA",
+            "accessPath": "/site-packages/Django-4.2.0.dist-info/METADATA"
+          },
+          {
+            "path": "/site-packages/django/__init__.py",
+            "accessPath": "/site-packages/django/__init__.py"
+          },
+          {
+            "path": "/usr/bin/python3",
+            "accessPath": "/usr/bin/python3"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [],
+        "members": [
+          "pkg-a",
+          "pkg-b",
+          "pkg-c"
+        ],
+        "rules": [
+          "name.case-fold",
+          "type.exact",
+          "version.semver-canonical"
+        ],
+        "state": "merged"
+      }
+    ]
+  },
+  {
+    "name": "duplicate records fold and retain every location and source",
+    "input": [
+      {
+        "id": "pkg-a",
+        "name": "requests",
+        "version": "2.22.0",
+        "type": "python",
+        "foundBy": "python-package-cataloger",
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-b",
+        "name": "requests",
+        "version": "2.22.0",
+        "type": "python",
+        "foundBy": "python-installed-package-cataloger",
+        "locations": [
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-c",
+        "name": "requests",
+        "version": "2.22.0",
+        "type": "python",
+        "foundBy": "binary-classifier-cataloger",
+        "locations": [
+          {
+            "path": "/c",
+            "accessPath": "/c"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      }
+    ],
+    "report": {
+      "version": "identity-merge/v1",
+      "inputCount": 3,
+      "outputCount": 1,
+      "mergePairCount": 2,
+      "mergedCount": 1,
+      "uniqueCount": 0,
+      "groupCount": 1,
+      "conflictCount": 0,
+      "pendingCount": 0,
+      "crossReferenceCount": 0,
+      "conflictThreshold": 1000,
+      "thresholdExceeded": false,
+      "rules": [
+        {
+          "id": "checksum.conflict",
+          "description": "records of the same component carry different checksums for one algorithm; both are retained"
+        },
+        {
+          "id": "identity.insufficient",
+          "description": "a record is missing name or type; it cannot participate in a merge"
+        },
+        {
+          "id": "name.case-fold",
+          "description": "package names differ only in letter case"
+        },
+        {
+          "id": "name.exact",
+          "description": "package names are identical"
+        },
+        {
+          "id": "name.mismatch",
+          "description": "package names do not normalize to the same value"
+        },
+        {
+          "id": "name.namespace-fold",
+          "description": "package names carry the same namespace in different spellings (e.g. '@scope/name' and 'scope/name')"
+        },
+        {
+          "id": "name.separator-fold",
+          "description": "package names differ only in runs of '-', '_' or '.'"
+        },
+        {
+          "id": "purl.agrees",
+          "description": "the package URL agrees with the name and version of the record"
+        },
+        {
+          "id": "purl.disagrees",
+          "description": "the package URL names a different component than the package fields; merge is refused"
+        },
+        {
+          "id": "type.distinct-no-merge",
+          "description": "records name the same component but belong to different package types; they are cross-referenced instead of merged"
+        },
+        {
+          "id": "type.exact",
+          "description": "package types are identical; different types are never merged"
+        },
+        {
+          "id": "type.mismatch",
+          "description": "records have different package types"
+        },
+        {
+          "id": "version.exact",
+          "description": "package versions are identical"
+        },
+        {
+          "id": "version.mismatch",
+          "description": "package versions belong to different version classes"
+        },
+        {
+          "id": "version.missing",
+          "description": "at least one record has no version; the identity cannot be confirmed"
+        },
+        {
+          "id": "version.revision-variant",
+          "description": "package versions differ only by the package-manager revision (e.g. '1.2.3-1' and '1.2.3'); both values are retained"
+        },
+        {
+          "id": "version.semver-canonical",
+          "description": "package versions are the same semantic version in different spellings (e.g. 'v1.2' and '1.2.0')"
+        }
+      ],
+      "groups": [
+        {
+          "identity": "python||requests|2.22.0",
+          "type": "python",
+          "name": "requests",
+          "normalizedName": "requests",
+          "version": "2.22.0",
+          "versionValues": [
+            "2.22.0"
+          ],
+          "rules": [
+            "name.exact",
+            "type.exact",
+            "version.exact"
+          ],
+          "matches": [
+            {
+              "left": "pkg-a",
+              "right": "pkg-b",
+              "rules": [
+                "name.exact",
+                "version.exact"
+              ]
+            },
+            {
+              "left": "pkg-a",
+              "right": "pkg-c",
+              "rules": [
+                "name.exact",
+                "version.exact"
+              ]
+            }
+          ],
+          "members": [
+            {
+              "id": "pkg-a",
+              "name": "requests",
+              "version": "2.22.0",
+              "type": "python",
+              "foundBy": "python-package-cataloger",
+              "locationCount": 1
+            },
+            {
+              "id": "pkg-b",
+              "name": "requests",
+              "version": "2.22.0",
+              "type": "python",
+              "foundBy": "python-installed-package-cataloger",
+              "locationCount": 1
+            },
+            {
+              "id": "pkg-c",
+              "name": "requests",
+              "version": "2.22.0",
+              "type": "python",
+              "foundBy": "binary-classifier-cataloger",
+              "locationCount": 1
+            }
+          ],
+          "mergedID": "63b5c7b0c47e9e88",
+          "sources": [
+            "binary-classifier-cataloger",
+            "python-installed-package-cataloger",
+            "python-package-cataloger"
+          ],
+          "locationCount": 3,
+          "state": "merged"
+        }
+      ],
+      "standalone": [],
+      "crossReferences": [],
+      "reconciliation": {
+        "inputCount": 3,
+        "mergePairCount": 2,
+        "outputCount": 1,
+        "balanced": true,
+        "formula": "inputCount - mergePairCount = outputCount"
+      }
+    },
+    "components": [
+      {
+        "id": "63b5c7b0c47e9e88",
+        "identity": "python||requests|2.22.0",
+        "type": "python",
+        "name": "requests",
+        "version": "2.22.0",
+        "versions": [
+          "2.22.0"
+        ],
+        "sources": [
+          "binary-classifier-cataloger",
+          "python-installed-package-cataloger",
+          "python-package-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          },
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          },
+          {
+            "path": "/c",
+            "accessPath": "/c"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [],
+        "members": [
+          "pkg-a",
+          "pkg-b",
+          "pkg-c"
+        ],
+        "rules": [
+          "name.exact",
+          "type.exact",
+          "version.exact"
+        ],
+        "state": "merged"
+      }
+    ]
+  },
+  {
+    "name": "revision-only version difference merges and is marked conflicting",
+    "input": [
+      {
+        "id": "pkg-a",
+        "name": "libc6",
+        "version": "2.31-13",
+        "type": "deb",
+        "foundBy": "dpkg-db-cataloger",
+        "locations": [
+          {
+            "path": "/var/lib/dpkg/status",
+            "accessPath": "/var/lib/dpkg/status"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-b",
+        "name": "libc6",
+        "version": "2.31",
+        "type": "deb",
+        "foundBy": "binary-classifier-cataloger",
+        "locations": [
+          {
+            "path": "/lib/x86_64-linux-gnu/libc.so.6",
+            "accessPath": "/lib/x86_64-linux-gnu/libc.so.6"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      }
+    ],
+    "report": {
+      "version": "identity-merge/v1",
+      "inputCount": 2,
+      "outputCount": 1,
+      "mergePairCount": 1,
+      "mergedCount": 1,
+      "uniqueCount": 0,
+      "groupCount": 1,
+      "conflictCount": 1,
+      "pendingCount": 0,
+      "crossReferenceCount": 0,
+      "conflictThreshold": 1000,
+      "thresholdExceeded": false,
+      "rules": [
+        {
+          "id": "checksum.conflict",
+          "description": "records of the same component carry different checksums for one algorithm; both are retained"
+        },
+        {
+          "id": "identity.insufficient",
+          "description": "a record is missing name or type; it cannot participate in a merge"
+        },
+        {
+          "id": "name.case-fold",
+          "description": "package names differ only in letter case"
+        },
+        {
+          "id": "name.exact",
+          "description": "package names are identical"
+        },
+        {
+          "id": "name.mismatch",
+          "description": "package names do not normalize to the same value"
+        },
+        {
+          "id": "name.namespace-fold",
+          "description": "package names carry the same namespace in different spellings (e.g. '@scope/name' and 'scope/name')"
+        },
+        {
+          "id": "name.separator-fold",
+          "description": "package names differ only in runs of '-', '_' or '.'"
+        },
+        {
+          "id": "purl.agrees",
+          "description": "the package URL agrees with the name and version of the record"
+        },
+        {
+          "id": "purl.disagrees",
+          "description": "the package URL names a different component than the package fields; merge is refused"
+        },
+        {
+          "id": "type.distinct-no-merge",
+          "description": "records name the same component but belong to different package types; they are cross-referenced instead of merged"
+        },
+        {
+          "id": "type.exact",
+          "description": "package types are identical; different types are never merged"
+        },
+        {
+          "id": "type.mismatch",
+          "description": "records have different package types"
+        },
+        {
+          "id": "version.exact",
+          "description": "package versions are identical"
+        },
+        {
+          "id": "version.mismatch",
+          "description": "package versions belong to different version classes"
+        },
+        {
+          "id": "version.missing",
+          "description": "at least one record has no version; the identity cannot be confirmed"
+        },
+        {
+          "id": "version.revision-variant",
+          "description": "package versions differ only by the package-manager revision (e.g. '1.2.3-1' and '1.2.3'); both values are retained"
+        },
+        {
+          "id": "version.semver-canonical",
+          "description": "package versions are the same semantic version in different spellings (e.g. 'v1.2' and '1.2.0')"
+        }
+      ],
+      "groups": [
+        {
+          "identity": "deb||libc6|2.31",
+          "type": "deb",
+          "name": "libc6",
+          "normalizedName": "libc6",
+          "version": "2.31",
+          "versionValues": [
+            "2.31",
+            "2.31-13"
+          ],
+          "rules": [
+            "name.exact",
+            "type.exact",
+            "version.revision-variant"
+          ],
+          "matches": [
+            {
+              "left": "pkg-b",
+              "right": "pkg-a",
+              "rules": [
+                "name.exact",
+                "version.revision-variant"
+              ]
+            }
+          ],
+          "members": [
+            {
+              "id": "pkg-a",
+              "name": "libc6",
+              "version": "2.31-13",
+              "type": "deb",
+              "foundBy": "dpkg-db-cataloger",
+              "locationCount": 1
+            },
+            {
+              "id": "pkg-b",
+              "name": "libc6",
+              "version": "2.31",
+              "type": "deb",
+              "foundBy": "binary-classifier-cataloger",
+              "locationCount": 1
+            }
+          ],
+          "mergedID": "f40da905cac96dc8",
+          "conflicts": [
+            {
+              "field": "version",
+              "values": [
+                "2.31",
+                "2.31-13"
+              ],
+              "resolution": "kept-both",
+              "rule": "version.revision-variant",
+              "note": "versions differ by the package-manager revision; both values are retained"
+            }
+          ],
+          "sources": [
+            "binary-classifier-cataloger",
+            "dpkg-db-cataloger"
+          ],
+          "locationCount": 2,
+          "state": "merged"
+        }
+      ],
+      "standalone": [],
+      "crossReferences": [],
+      "reconciliation": {
+        "inputCount": 2,
+        "mergePairCount": 1,
+        "outputCount": 1,
+        "balanced": true,
+        "formula": "inputCount - mergePairCount = outputCount"
+      }
+    },
+    "components": [
+      {
+        "id": "f40da905cac96dc8",
+        "identity": "deb||libc6|2.31",
+        "type": "deb",
+        "name": "libc6",
+        "version": "2.31",
+        "versions": [
+          "2.31",
+          "2.31-13"
+        ],
+        "sources": [
+          "binary-classifier-cataloger",
+          "dpkg-db-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/lib/x86_64-linux-gnu/libc.so.6",
+            "accessPath": "/lib/x86_64-linux-gnu/libc.so.6"
+          },
+          {
+            "path": "/var/lib/dpkg/status",
+            "accessPath": "/var/lib/dpkg/status"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [],
+        "conflicts": [
+          {
+            "field": "version",
+            "values": [
+              "2.31",
+              "2.31-13"
+            ],
+            "resolution": "kept-both",
+            "rule": "version.revision-variant",
+            "note": "versions differ by the package-manager revision; both values are retained"
+          }
+        ],
+        "members": [
+          "pkg-a",
+          "pkg-b"
+        ],
+        "rules": [
+          "name.exact",
+          "type.exact",
+          "version.revision-variant"
+        ],
+        "state": "merged"
+      }
+    ]
+  },
+  {
+    "name": "case separator and namespace spelling differences normalize",
+    "input": [
+      {
+        "id": "pkg-a",
+        "name": "Foo_Bar",
+        "version": "1.0.0",
+        "type": "python",
+        "foundBy": "python-package-cataloger",
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-b",
+        "name": "foo-bar",
+        "version": "1.0.0",
+        "type": "python",
+        "foundBy": "python-installed-package-cataloger",
+        "locations": [
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-c",
+        "name": "foo.bar",
+        "version": "1.0.0",
+        "type": "python",
+        "foundBy": "python-uv-lock-cataloger",
+        "locations": [
+          {
+            "path": "/c",
+            "accessPath": "/c"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      }
+    ],
+    "report": {
+      "version": "identity-merge/v1",
+      "inputCount": 3,
+      "outputCount": 1,
+      "mergePairCount": 2,
+      "mergedCount": 1,
+      "uniqueCount": 0,
+      "groupCount": 1,
+      "conflictCount": 0,
+      "pendingCount": 0,
+      "crossReferenceCount": 0,
+      "conflictThreshold": 1000,
+      "thresholdExceeded": false,
+      "rules": [
+        {
+          "id": "checksum.conflict",
+          "description": "records of the same component carry different checksums for one algorithm; both are retained"
+        },
+        {
+          "id": "identity.insufficient",
+          "description": "a record is missing name or type; it cannot participate in a merge"
+        },
+        {
+          "id": "name.case-fold",
+          "description": "package names differ only in letter case"
+        },
+        {
+          "id": "name.exact",
+          "description": "package names are identical"
+        },
+        {
+          "id": "name.mismatch",
+          "description": "package names do not normalize to the same value"
+        },
+        {
+          "id": "name.namespace-fold",
+          "description": "package names carry the same namespace in different spellings (e.g. '@scope/name' and 'scope/name')"
+        },
+        {
+          "id": "name.separator-fold",
+          "description": "package names differ only in runs of '-', '_' or '.'"
+        },
+        {
+          "id": "purl.agrees",
+          "description": "the package URL agrees with the name and version of the record"
+        },
+        {
+          "id": "purl.disagrees",
+          "description": "the package URL names a different component than the package fields; merge is refused"
+        },
+        {
+          "id": "type.distinct-no-merge",
+          "description": "records name the same component but belong to different package types; they are cross-referenced instead of merged"
+        },
+        {
+          "id": "type.exact",
+          "description": "package types are identical; different types are never merged"
+        },
+        {
+          "id": "type.mismatch",
+          "description": "records have different package types"
+        },
+        {
+          "id": "version.exact",
+          "description": "package versions are identical"
+        },
+        {
+          "id": "version.mismatch",
+          "description": "package versions belong to different version classes"
+        },
+        {
+          "id": "version.missing",
+          "description": "at least one record has no version; the identity cannot be confirmed"
+        },
+        {
+          "id": "version.revision-variant",
+          "description": "package versions differ only by the package-manager revision (e.g. '1.2.3-1' and '1.2.3'); both values are retained"
+        },
+        {
+          "id": "version.semver-canonical",
+          "description": "package versions are the same semantic version in different spellings (e.g. 'v1.2' and '1.2.0')"
+        }
+      ],
+      "groups": [
+        {
+          "identity": "python||foo-bar|1.0.0",
+          "type": "python",
+          "name": "Foo_Bar",
+          "normalizedName": "foo-bar",
+          "version": "1.0.0",
+          "versionValues": [
+            "1.0.0"
+          ],
+          "rules": [
+            "name.case-fold",
+            "name.separator-fold",
+            "type.exact",
+            "version.exact"
+          ],
+          "matches": [
+            {
+              "left": "pkg-a",
+              "right": "pkg-b",
+              "rules": [
+                "name.case-fold",
+                "name.separator-fold",
+                "version.exact"
+              ]
+            },
+            {
+              "left": "pkg-a",
+              "right": "pkg-c",
+              "rules": [
+                "name.case-fold",
+                "name.separator-fold",
+                "version.exact"
+              ]
+            }
+          ],
+          "members": [
+            {
+              "id": "pkg-a",
+              "name": "Foo_Bar",
+              "version": "1.0.0",
+              "type": "python",
+              "foundBy": "python-package-cataloger",
+              "locationCount": 1
+            },
+            {
+              "id": "pkg-b",
+              "name": "foo-bar",
+              "version": "1.0.0",
+              "type": "python",
+              "foundBy": "python-installed-package-cataloger",
+              "locationCount": 1
+            },
+            {
+              "id": "pkg-c",
+              "name": "foo.bar",
+              "version": "1.0.0",
+              "type": "python",
+              "foundBy": "python-uv-lock-cataloger",
+              "locationCount": 1
+            }
+          ],
+          "mergedID": "40e63dcffce0114d",
+          "sources": [
+            "python-installed-package-cataloger",
+            "python-package-cataloger",
+            "python-uv-lock-cataloger"
+          ],
+          "locationCount": 3,
+          "state": "merged"
+        }
+      ],
+      "standalone": [],
+      "crossReferences": [],
+      "reconciliation": {
+        "inputCount": 3,
+        "mergePairCount": 2,
+        "outputCount": 1,
+        "balanced": true,
+        "formula": "inputCount - mergePairCount = outputCount"
+      }
+    },
+    "components": [
+      {
+        "id": "40e63dcffce0114d",
+        "identity": "python||foo-bar|1.0.0",
+        "type": "python",
+        "name": "Foo_Bar",
+        "version": "1.0.0",
+        "versions": [
+          "1.0.0"
+        ],
+        "sources": [
+          "python-installed-package-cataloger",
+          "python-package-cataloger",
+          "python-uv-lock-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          },
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          },
+          {
+            "path": "/c",
+            "accessPath": "/c"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [],
+        "members": [
+          "pkg-a",
+          "pkg-b",
+          "pkg-c"
+        ],
+        "rules": [
+          "name.case-fold",
+          "name.separator-fold",
+          "type.exact",
+          "version.exact"
+        ],
+        "state": "merged"
+      }
+    ]
+  },
+  {
+    "name": "checksum and path from separate sources merge without losing either",
+    "input": [
+      {
+        "id": "pkg-a",
+        "name": "openssl",
+        "version": "3.0.2",
+        "type": "apk",
+        "foundBy": "apk-db-cataloger",
+        "locations": [
+          {
+            "path": "/lib/apk/db/installed",
+            "accessPath": "/lib/apk/db/installed"
+          }
+        ],
+        "licenses": null,
+        "checksums": [
+          {
+            "algorithm": "sha256",
+            "value": "aaaa",
+            "source": "apk-db-cataloger"
+          }
+        ],
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-b",
+        "name": "openssl",
+        "version": "3.0.2-r1",
+        "type": "apk",
+        "foundBy": "binary-classifier-cataloger",
+        "locations": [
+          {
+            "path": "/usr/bin/openssl",
+            "accessPath": "/usr/bin/openssl"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      }
+    ],
+    "report": {
+      "version": "identity-merge/v1",
+      "inputCount": 2,
+      "outputCount": 1,
+      "mergePairCount": 1,
+      "mergedCount": 1,
+      "uniqueCount": 0,
+      "groupCount": 1,
+      "conflictCount": 1,
+      "pendingCount": 0,
+      "crossReferenceCount": 0,
+      "conflictThreshold": 1000,
+      "thresholdExceeded": false,
+      "rules": [
+        {
+          "id": "checksum.conflict",
+          "description": "records of the same component carry different checksums for one algorithm; both are retained"
+        },
+        {
+          "id": "identity.insufficient",
+          "description": "a record is missing name or type; it cannot participate in a merge"
+        },
+        {
+          "id": "name.case-fold",
+          "description": "package names differ only in letter case"
+        },
+        {
+          "id": "name.exact",
+          "description": "package names are identical"
+        },
+        {
+          "id": "name.mismatch",
+          "description": "package names do not normalize to the same value"
+        },
+        {
+          "id": "name.namespace-fold",
+          "description": "package names carry the same namespace in different spellings (e.g. '@scope/name' and 'scope/name')"
+        },
+        {
+          "id": "name.separator-fold",
+          "description": "package names differ only in runs of '-', '_' or '.'"
+        },
+        {
+          "id": "purl.agrees",
+          "description": "the package URL agrees with the name and version of the record"
+        },
+        {
+          "id": "purl.disagrees",
+          "description": "the package URL names a different component than the package fields; merge is refused"
+        },
+        {
+          "id": "type.distinct-no-merge",
+          "description": "records name the same component but belong to different package types; they are cross-referenced instead of merged"
+        },
+        {
+          "id": "type.exact",
+          "description": "package types are identical; different types are never merged"
+        },
+        {
+          "id": "type.mismatch",
+          "description": "records have different package types"
+        },
+        {
+          "id": "version.exact",
+          "description": "package versions are identical"
+        },
+        {
+          "id": "version.mismatch",
+          "description": "package versions belong to different version classes"
+        },
+        {
+          "id": "version.missing",
+          "description": "at least one record has no version; the identity cannot be confirmed"
+        },
+        {
+          "id": "version.revision-variant",
+          "description": "package versions differ only by the package-manager revision (e.g. '1.2.3-1' and '1.2.3'); both values are retained"
+        },
+        {
+          "id": "version.semver-canonical",
+          "description": "package versions are the same semantic version in different spellings (e.g. 'v1.2' and '1.2.0')"
+        }
+      ],
+      "groups": [
+        {
+          "identity": "apk||openssl|3.0.2",
+          "type": "apk",
+          "name": "openssl",
+          "normalizedName": "openssl",
+          "version": "3.0.2",
+          "versionValues": [
+            "3.0.2",
+            "3.0.2-r1"
+          ],
+          "rules": [
+            "name.exact",
+            "type.exact",
+            "version.revision-variant"
+          ],
+          "matches": [
+            {
+              "left": "pkg-a",
+              "right": "pkg-b",
+              "rules": [
+                "name.exact",
+                "version.revision-variant"
+              ]
+            }
+          ],
+          "members": [
+            {
+              "id": "pkg-a",
+              "name": "openssl",
+              "version": "3.0.2",
+              "type": "apk",
+              "foundBy": "apk-db-cataloger",
+              "locationCount": 1
+            },
+            {
+              "id": "pkg-b",
+              "name": "openssl",
+              "version": "3.0.2-r1",
+              "type": "apk",
+              "foundBy": "binary-classifier-cataloger",
+              "locationCount": 1
+            }
+          ],
+          "mergedID": "e6b1a0858ce7955a",
+          "conflicts": [
+            {
+              "field": "version",
+              "values": [
+                "3.0.2",
+                "3.0.2-r1"
+              ],
+              "resolution": "kept-both",
+              "rule": "version.revision-variant",
+              "note": "versions differ by the package-manager revision; both values are retained"
+            }
+          ],
+          "sources": [
+            "apk-db-cataloger",
+            "binary-classifier-cataloger"
+          ],
+          "locationCount": 2,
+          "state": "merged"
+        }
+      ],
+      "standalone": [],
+      "crossReferences": [],
+      "reconciliation": {
+        "inputCount": 2,
+        "mergePairCount": 1,
+        "outputCount": 1,
+        "balanced": true,
+        "formula": "inputCount - mergePairCount = outputCount"
+      }
+    },
+    "components": [
+      {
+        "id": "e6b1a0858ce7955a",
+        "identity": "apk||openssl|3.0.2",
+        "type": "apk",
+        "name": "openssl",
+        "version": "3.0.2",
+        "versions": [
+          "3.0.2",
+          "3.0.2-r1"
+        ],
+        "sources": [
+          "apk-db-cataloger",
+          "binary-classifier-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/lib/apk/db/installed",
+            "accessPath": "/lib/apk/db/installed"
+          },
+          {
+            "path": "/usr/bin/openssl",
+            "accessPath": "/usr/bin/openssl"
+          }
+        ],
+        "licenses": [],
+        "checksums": [
+          {
+            "algorithm": "sha256",
+            "value": "aaaa",
+            "source": "apk-db-cataloger"
+          }
+        ],
+        "externalIdentifiers": [],
+        "conflicts": [
+          {
+            "field": "version",
+            "values": [
+              "3.0.2",
+              "3.0.2-r1"
+            ],
+            "resolution": "kept-both",
+            "rule": "version.revision-variant",
+            "note": "versions differ by the package-manager revision; both values are retained"
+          }
+        ],
+        "members": [
+          "pkg-a",
+          "pkg-b"
+        ],
+        "rules": [
+          "name.exact",
+          "type.exact",
+          "version.revision-variant"
+        ],
+        "state": "merged"
+      }
+    ]
+  },
+  {
+    "name": "distinct versions stay independent",
+    "input": [
+      {
+        "id": "pkg-a",
+        "name": "numpy",
+        "version": "1.24.0",
+        "type": "python",
+        "foundBy": "python-package-cataloger",
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-b",
+        "name": "numpy",
+        "version": "1.25.0",
+        "type": "python",
+        "foundBy": "python-installed-package-cataloger",
+        "locations": [
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      }
+    ],
+    "report": {
+      "version": "identity-merge/v1",
+      "inputCount": 2,
+      "outputCount": 2,
+      "mergePairCount": 0,
+      "mergedCount": 0,
+      "uniqueCount": 2,
+      "groupCount": 0,
+      "conflictCount": 0,
+      "pendingCount": 0,
+      "crossReferenceCount": 0,
+      "conflictThreshold": 1000,
+      "thresholdExceeded": false,
+      "rules": [
+        {
+          "id": "checksum.conflict",
+          "description": "records of the same component carry different checksums for one algorithm; both are retained"
+        },
+        {
+          "id": "identity.insufficient",
+          "description": "a record is missing name or type; it cannot participate in a merge"
+        },
+        {
+          "id": "name.case-fold",
+          "description": "package names differ only in letter case"
+        },
+        {
+          "id": "name.exact",
+          "description": "package names are identical"
+        },
+        {
+          "id": "name.mismatch",
+          "description": "package names do not normalize to the same value"
+        },
+        {
+          "id": "name.namespace-fold",
+          "description": "package names carry the same namespace in different spellings (e.g. '@scope/name' and 'scope/name')"
+        },
+        {
+          "id": "name.separator-fold",
+          "description": "package names differ only in runs of '-', '_' or '.'"
+        },
+        {
+          "id": "purl.agrees",
+          "description": "the package URL agrees with the name and version of the record"
+        },
+        {
+          "id": "purl.disagrees",
+          "description": "the package URL names a different component than the package fields; merge is refused"
+        },
+        {
+          "id": "type.distinct-no-merge",
+          "description": "records name the same component but belong to different package types; they are cross-referenced instead of merged"
+        },
+        {
+          "id": "type.exact",
+          "description": "package types are identical; different types are never merged"
+        },
+        {
+          "id": "type.mismatch",
+          "description": "records have different package types"
+        },
+        {
+          "id": "version.exact",
+          "description": "package versions are identical"
+        },
+        {
+          "id": "version.mismatch",
+          "description": "package versions belong to different version classes"
+        },
+        {
+          "id": "version.missing",
+          "description": "at least one record has no version; the identity cannot be confirmed"
+        },
+        {
+          "id": "version.revision-variant",
+          "description": "package versions differ only by the package-manager revision (e.g. '1.2.3-1' and '1.2.3'); both values are retained"
+        },
+        {
+          "id": "version.semver-canonical",
+          "description": "package versions are the same semantic version in different spellings (e.g. 'v1.2' and '1.2.0')"
+        }
+      ],
+      "groups": [],
+      "standalone": [],
+      "crossReferences": [],
+      "reconciliation": {
+        "inputCount": 2,
+        "mergePairCount": 0,
+        "outputCount": 2,
+        "balanced": true,
+        "formula": "inputCount - mergePairCount = outputCount"
+      }
+    },
+    "components": [
+      {
+        "id": "fd08ae37277a8577",
+        "identity": "python||numpy|1.24.0",
+        "type": "python",
+        "name": "numpy",
+        "version": "1.24.0",
+        "versions": [
+          "1.24.0"
+        ],
+        "sources": [
+          "python-package-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [],
+        "members": [
+          "pkg-a"
+        ],
+        "rules": [
+          "name.exact",
+          "type.exact",
+          "version.exact"
+        ],
+        "state": "unique"
+      },
+      {
+        "id": "fbaf65ea1588746b",
+        "identity": "python||numpy|1.25.0",
+        "type": "python",
+        "name": "numpy",
+        "version": "1.25.0",
+        "versions": [
+          "1.25.0"
+        ],
+        "sources": [
+          "python-installed-package-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [],
+        "members": [
+          "pkg-b"
+        ],
+        "rules": [
+          "name.exact",
+          "type.exact",
+          "version.exact"
+        ],
+        "state": "unique"
+      }
+    ]
+  },
+  {
+    "name": "different package types are cross-referenced not merged",
+    "input": [
+      {
+        "id": "pkg-a",
+        "name": "requests",
+        "version": "2.22.0",
+        "type": "python",
+        "foundBy": "python-package-cataloger",
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-b",
+        "name": "requests",
+        "version": "2.22.0",
+        "type": "deb",
+        "foundBy": "dpkg-db-cataloger",
+        "locations": [
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      }
+    ],
+    "report": {
+      "version": "identity-merge/v1",
+      "inputCount": 2,
+      "outputCount": 2,
+      "mergePairCount": 0,
+      "mergedCount": 0,
+      "uniqueCount": 2,
+      "groupCount": 0,
+      "conflictCount": 0,
+      "pendingCount": 0,
+      "crossReferenceCount": 1,
+      "conflictThreshold": 1000,
+      "thresholdExceeded": false,
+      "rules": [
+        {
+          "id": "checksum.conflict",
+          "description": "records of the same component carry different checksums for one algorithm; both are retained"
+        },
+        {
+          "id": "identity.insufficient",
+          "description": "a record is missing name or type; it cannot participate in a merge"
+        },
+        {
+          "id": "name.case-fold",
+          "description": "package names differ only in letter case"
+        },
+        {
+          "id": "name.exact",
+          "description": "package names are identical"
+        },
+        {
+          "id": "name.mismatch",
+          "description": "package names do not normalize to the same value"
+        },
+        {
+          "id": "name.namespace-fold",
+          "description": "package names carry the same namespace in different spellings (e.g. '@scope/name' and 'scope/name')"
+        },
+        {
+          "id": "name.separator-fold",
+          "description": "package names differ only in runs of '-', '_' or '.'"
+        },
+        {
+          "id": "purl.agrees",
+          "description": "the package URL agrees with the name and version of the record"
+        },
+        {
+          "id": "purl.disagrees",
+          "description": "the package URL names a different component than the package fields; merge is refused"
+        },
+        {
+          "id": "type.distinct-no-merge",
+          "description": "records name the same component but belong to different package types; they are cross-referenced instead of merged"
+        },
+        {
+          "id": "type.exact",
+          "description": "package types are identical; different types are never merged"
+        },
+        {
+          "id": "type.mismatch",
+          "description": "records have different package types"
+        },
+        {
+          "id": "version.exact",
+          "description": "package versions are identical"
+        },
+        {
+          "id": "version.mismatch",
+          "description": "package versions belong to different version classes"
+        },
+        {
+          "id": "version.missing",
+          "description": "at least one record has no version; the identity cannot be confirmed"
+        },
+        {
+          "id": "version.revision-variant",
+          "description": "package versions differ only by the package-manager revision (e.g. '1.2.3-1' and '1.2.3'); both values are retained"
+        },
+        {
+          "id": "version.semver-canonical",
+          "description": "package versions are the same semantic version in different spellings (e.g. 'v1.2' and '1.2.0')"
+        }
+      ],
+      "groups": [],
+      "standalone": [],
+      "crossReferences": [
+        {
+          "leftID": "02a6c59e70a064b0",
+          "rightID": "63b5c7b0c47e9e88",
+          "reason": "deb and python name the same component but are different package types; they are not merged"
+        }
+      ],
+      "reconciliation": {
+        "inputCount": 2,
+        "mergePairCount": 0,
+        "outputCount": 2,
+        "balanced": true,
+        "formula": "inputCount - mergePairCount = outputCount"
+      }
+    },
+    "components": [
+      {
+        "id": "02a6c59e70a064b0",
+        "identity": "deb||requests|2.22.0",
+        "type": "deb",
+        "name": "requests",
+        "version": "2.22.0",
+        "versions": [
+          "2.22.0"
+        ],
+        "sources": [
+          "dpkg-db-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [],
+        "members": [
+          "pkg-b"
+        ],
+        "rules": [
+          "name.exact",
+          "type.exact",
+          "version.exact"
+        ],
+        "state": "unique"
+      },
+      {
+        "id": "63b5c7b0c47e9e88",
+        "identity": "python||requests|2.22.0",
+        "type": "python",
+        "name": "requests",
+        "version": "2.22.0",
+        "versions": [
+          "2.22.0"
+        ],
+        "sources": [
+          "python-package-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [],
+        "members": [
+          "pkg-a"
+        ],
+        "rules": [
+          "name.exact",
+          "type.exact",
+          "version.exact"
+        ],
+        "state": "unique"
+      }
+    ]
+  },
+  {
+    "name": "missing version keeps the entry independent and pending",
+    "input": [
+      {
+        "id": "pkg-a",
+        "name": "busybox",
+        "version": "1.35.0",
+        "type": "apk",
+        "foundBy": "apk-db-cataloger",
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-b",
+        "name": "busybox",
+        "version": "",
+        "type": "apk",
+        "foundBy": "binary-classifier-cataloger",
+        "locations": [
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      }
+    ],
+    "report": {
+      "version": "identity-merge/v1",
+      "inputCount": 2,
+      "outputCount": 2,
+      "mergePairCount": 0,
+      "mergedCount": 0,
+      "uniqueCount": 1,
+      "groupCount": 0,
+      "conflictCount": 0,
+      "pendingCount": 1,
+      "crossReferenceCount": 0,
+      "conflictThreshold": 1000,
+      "thresholdExceeded": false,
+      "rules": [
+        {
+          "id": "checksum.conflict",
+          "description": "records of the same component carry different checksums for one algorithm; both are retained"
+        },
+        {
+          "id": "identity.insufficient",
+          "description": "a record is missing name or type; it cannot participate in a merge"
+        },
+        {
+          "id": "name.case-fold",
+          "description": "package names differ only in letter case"
+        },
+        {
+          "id": "name.exact",
+          "description": "package names are identical"
+        },
+        {
+          "id": "name.mismatch",
+          "description": "package names do not normalize to the same value"
+        },
+        {
+          "id": "name.namespace-fold",
+          "description": "package names carry the same namespace in different spellings (e.g. '@scope/name' and 'scope/name')"
+        },
+        {
+          "id": "name.separator-fold",
+          "description": "package names differ only in runs of '-', '_' or '.'"
+        },
+        {
+          "id": "purl.agrees",
+          "description": "the package URL agrees with the name and version of the record"
+        },
+        {
+          "id": "purl.disagrees",
+          "description": "the package URL names a different component than the package fields; merge is refused"
+        },
+        {
+          "id": "type.distinct-no-merge",
+          "description": "records name the same component but belong to different package types; they are cross-referenced instead of merged"
+        },
+        {
+          "id": "type.exact",
+          "description": "package types are identical; different types are never merged"
+        },
+        {
+          "id": "type.mismatch",
+          "description": "records have different package types"
+        },
+        {
+          "id": "version.exact",
+          "description": "package versions are identical"
+        },
+        {
+          "id": "version.mismatch",
+          "description": "package versions belong to different version classes"
+        },
+        {
+          "id": "version.missing",
+          "description": "at least one record has no version; the identity cannot be confirmed"
+        },
+        {
+          "id": "version.revision-variant",
+          "description": "package versions differ only by the package-manager revision (e.g. '1.2.3-1' and '1.2.3'); both values are retained"
+        },
+        {
+          "id": "version.semver-canonical",
+          "description": "package versions are the same semantic version in different spellings (e.g. 'v1.2' and '1.2.0')"
+        }
+      ],
+      "groups": [],
+      "standalone": [
+        {
+          "id": "pkg-b",
+          "name": "busybox",
+          "version": "",
+          "type": "apk",
+          "reason": "version is missing; identity cannot be confirmed (insufficient evidence, not a conflict)",
+          "state": "needs-confirmation"
+        }
+      ],
+      "crossReferences": [],
+      "reconciliation": {
+        "inputCount": 2,
+        "mergePairCount": 0,
+        "outputCount": 2,
+        "balanced": true,
+        "formula": "inputCount - mergePairCount = outputCount"
+      }
+    },
+    "components": [
+      {
+        "id": "03d28c692c1d2184",
+        "identity": "apk||busybox|",
+        "type": "apk",
+        "name": "busybox",
+        "version": "",
+        "sources": [
+          "binary-classifier-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [],
+        "members": [
+          "pkg-b"
+        ],
+        "state": "needs-confirmation"
+      },
+      {
+        "id": "a85417aac2f42e01",
+        "identity": "apk||busybox|1.35.0",
+        "type": "apk",
+        "name": "busybox",
+        "version": "1.35.0",
+        "versions": [
+          "1.35.0"
+        ],
+        "sources": [
+          "apk-db-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [],
+        "members": [
+          "pkg-a"
+        ],
+        "rules": [
+          "name.exact",
+          "type.exact",
+          "version.exact"
+        ],
+        "state": "unique"
+      }
+    ]
+  },
+  {
+    "name": "contradictory purl blocks the merge",
+    "input": [
+      {
+        "id": "pkg-a",
+        "name": "pygments",
+        "version": "2.6.1",
+        "type": "python",
+        "purl": "pkg:pypi/requests@2.22.0",
+        "foundBy": "python-package-cataloger",
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-b",
+        "name": "pygments",
+        "version": "2.6.1",
+        "type": "python",
+        "foundBy": "python-installed-package-cataloger",
+        "locations": [
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      }
+    ],
+    "report": {
+      "version": "identity-merge/v1",
+      "inputCount": 2,
+      "outputCount": 2,
+      "mergePairCount": 0,
+      "mergedCount": 0,
+      "uniqueCount": 0,
+      "groupCount": 0,
+      "conflictCount": 1,
+      "pendingCount": 2,
+      "crossReferenceCount": 0,
+      "conflictThreshold": 1000,
+      "thresholdExceeded": false,
+      "rules": [
+        {
+          "id": "checksum.conflict",
+          "description": "records of the same component carry different checksums for one algorithm; both are retained"
+        },
+        {
+          "id": "identity.insufficient",
+          "description": "a record is missing name or type; it cannot participate in a merge"
+        },
+        {
+          "id": "name.case-fold",
+          "description": "package names differ only in letter case"
+        },
+        {
+          "id": "name.exact",
+          "description": "package names are identical"
+        },
+        {
+          "id": "name.mismatch",
+          "description": "package names do not normalize to the same value"
+        },
+        {
+          "id": "name.namespace-fold",
+          "description": "package names carry the same namespace in different spellings (e.g. '@scope/name' and 'scope/name')"
+        },
+        {
+          "id": "name.separator-fold",
+          "description": "package names differ only in runs of '-', '_' or '.'"
+        },
+        {
+          "id": "purl.agrees",
+          "description": "the package URL agrees with the name and version of the record"
+        },
+        {
+          "id": "purl.disagrees",
+          "description": "the package URL names a different component than the package fields; merge is refused"
+        },
+        {
+          "id": "type.distinct-no-merge",
+          "description": "records name the same component but belong to different package types; they are cross-referenced instead of merged"
+        },
+        {
+          "id": "type.exact",
+          "description": "package types are identical; different types are never merged"
+        },
+        {
+          "id": "type.mismatch",
+          "description": "records have different package types"
+        },
+        {
+          "id": "version.exact",
+          "description": "package versions are identical"
+        },
+        {
+          "id": "version.mismatch",
+          "description": "package versions belong to different version classes"
+        },
+        {
+          "id": "version.missing",
+          "description": "at least one record has no version; the identity cannot be confirmed"
+        },
+        {
+          "id": "version.revision-variant",
+          "description": "package versions differ only by the package-manager revision (e.g. '1.2.3-1' and '1.2.3'); both values are retained"
+        },
+        {
+          "id": "version.semver-canonical",
+          "description": "package versions are the same semantic version in different spellings (e.g. 'v1.2' and '1.2.0')"
+        }
+      ],
+      "groups": [],
+      "standalone": [
+        {
+          "id": "pkg-a",
+          "name": "pygments",
+          "version": "2.6.1",
+          "type": "python",
+          "reason": "purl disagrees with package fields; identity is contradictory",
+          "state": "needs-confirmation",
+          "conflicts": [
+            {
+              "field": "purl",
+              "values": [
+                "2.6.1",
+                "pkg:pypi/requests@2.22.0",
+                "pygments"
+              ],
+              "resolution": "unresolved",
+              "rule": "purl.disagrees",
+              "note": "package url names \"requests\" but the package name is \"pygments\""
+            }
+          ]
+        },
+        {
+          "id": "pkg-b",
+          "name": "pygments",
+          "version": "2.6.1",
+          "type": "python",
+          "reason": "purl disagrees with package fields; identity is contradictory",
+          "state": "needs-confirmation"
+        }
+      ],
+      "crossReferences": [],
+      "reconciliation": {
+        "inputCount": 2,
+        "mergePairCount": 0,
+        "outputCount": 2,
+        "balanced": true,
+        "formula": "inputCount - mergePairCount = outputCount"
+      }
+    },
+    "components": [
+      {
+        "id": "54a1f3f54e332820",
+        "identity": "python||pygments|2.6.1",
+        "type": "python",
+        "name": "pygments",
+        "version": "2.6.1",
+        "versions": [
+          "2.6.1"
+        ],
+        "purl": "pkg:pypi/requests@2.22.0",
+        "sources": [
+          "python-package-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [
+          {
+            "type": "purl",
+            "value": "pkg:pypi/requests@2.22.0",
+            "source": "package-url"
+          }
+        ],
+        "conflicts": [
+          {
+            "field": "purl",
+            "values": [
+              "2.6.1",
+              "pkg:pypi/requests@2.22.0",
+              "pygments"
+            ],
+            "resolution": "unresolved",
+            "rule": "purl.disagrees",
+            "note": "package url names \"requests\" but the package name is \"pygments\""
+          }
+        ],
+        "members": [
+          "pkg-a"
+        ],
+        "state": "needs-confirmation"
+      },
+      {
+        "id": "54a1f3f54e332820",
+        "identity": "python||pygments|2.6.1",
+        "type": "python",
+        "name": "pygments",
+        "version": "2.6.1",
+        "versions": [
+          "2.6.1"
+        ],
+        "sources": [
+          "python-installed-package-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [],
+        "members": [
+          "pkg-b"
+        ],
+        "state": "needs-confirmation"
+      }
+    ]
+  },
+  {
+    "name": "checksum disagreement is surfaced and both values retained",
+    "input": [
+      {
+        "id": "pkg-a",
+        "name": "lodash",
+        "version": "4.17.21",
+        "type": "npm",
+        "foundBy": "javascript-package-cataloger",
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          }
+        ],
+        "licenses": null,
+        "checksums": [
+          {
+            "algorithm": "sha512",
+            "value": "aaaa",
+            "source": "lock-file"
+          }
+        ],
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-b",
+        "name": "lodash",
+        "version": "4.17.21",
+        "type": "npm",
+        "foundBy": "javascript-lock-cataloger",
+        "locations": [
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": null,
+        "checksums": [
+          {
+            "algorithm": "sha512",
+            "value": "bbbb",
+            "source": "node-modules"
+          }
+        ],
+        "externalIdentifiers": null
+      }
+    ],
+    "report": {
+      "version": "identity-merge/v1",
+      "inputCount": 2,
+      "outputCount": 1,
+      "mergePairCount": 1,
+      "mergedCount": 1,
+      "uniqueCount": 0,
+      "groupCount": 1,
+      "conflictCount": 1,
+      "pendingCount": 0,
+      "crossReferenceCount": 0,
+      "conflictThreshold": 1000,
+      "thresholdExceeded": false,
+      "rules": [
+        {
+          "id": "checksum.conflict",
+          "description": "records of the same component carry different checksums for one algorithm; both are retained"
+        },
+        {
+          "id": "identity.insufficient",
+          "description": "a record is missing name or type; it cannot participate in a merge"
+        },
+        {
+          "id": "name.case-fold",
+          "description": "package names differ only in letter case"
+        },
+        {
+          "id": "name.exact",
+          "description": "package names are identical"
+        },
+        {
+          "id": "name.mismatch",
+          "description": "package names do not normalize to the same value"
+        },
+        {
+          "id": "name.namespace-fold",
+          "description": "package names carry the same namespace in different spellings (e.g. '@scope/name' and 'scope/name')"
+        },
+        {
+          "id": "name.separator-fold",
+          "description": "package names differ only in runs of '-', '_' or '.'"
+        },
+        {
+          "id": "purl.agrees",
+          "description": "the package URL agrees with the name and version of the record"
+        },
+        {
+          "id": "purl.disagrees",
+          "description": "the package URL names a different component than the package fields; merge is refused"
+        },
+        {
+          "id": "type.distinct-no-merge",
+          "description": "records name the same component but belong to different package types; they are cross-referenced instead of merged"
+        },
+        {
+          "id": "type.exact",
+          "description": "package types are identical; different types are never merged"
+        },
+        {
+          "id": "type.mismatch",
+          "description": "records have different package types"
+        },
+        {
+          "id": "version.exact",
+          "description": "package versions are identical"
+        },
+        {
+          "id": "version.mismatch",
+          "description": "package versions belong to different version classes"
+        },
+        {
+          "id": "version.missing",
+          "description": "at least one record has no version; the identity cannot be confirmed"
+        },
+        {
+          "id": "version.revision-variant",
+          "description": "package versions differ only by the package-manager revision (e.g. '1.2.3-1' and '1.2.3'); both values are retained"
+        },
+        {
+          "id": "version.semver-canonical",
+          "description": "package versions are the same semantic version in different spellings (e.g. 'v1.2' and '1.2.0')"
+        }
+      ],
+      "groups": [
+        {
+          "identity": "npm||lodash|4.17.21",
+          "type": "npm",
+          "name": "lodash",
+          "normalizedName": "lodash",
+          "version": "4.17.21",
+          "versionValues": [
+            "4.17.21"
+          ],
+          "rules": [
+            "name.exact",
+            "type.exact",
+            "version.exact"
+          ],
+          "matches": [
+            {
+              "left": "pkg-a",
+              "right": "pkg-b",
+              "rules": [
+                "name.exact",
+                "version.exact"
+              ]
+            }
+          ],
+          "members": [
+            {
+              "id": "pkg-a",
+              "name": "lodash",
+              "version": "4.17.21",
+              "type": "npm",
+              "foundBy": "javascript-package-cataloger",
+              "locationCount": 1
+            },
+            {
+              "id": "pkg-b",
+              "name": "lodash",
+              "version": "4.17.21",
+              "type": "npm",
+              "foundBy": "javascript-lock-cataloger",
+              "locationCount": 1
+            }
+          ],
+          "mergedID": "52ee9c06228d16b2",
+          "conflicts": [
+            {
+              "field": "checksum:sha512",
+              "values": [
+                "aaaa",
+                "bbbb"
+              ],
+              "resolution": "kept-both",
+              "rule": "checksum.conflict",
+              "note": "records disagree on the checksum; both values are retained"
+            }
+          ],
+          "sources": [
+            "javascript-lock-cataloger",
+            "javascript-package-cataloger"
+          ],
+          "locationCount": 2,
+          "state": "merged"
+        }
+      ],
+      "standalone": [],
+      "crossReferences": [],
+      "reconciliation": {
+        "inputCount": 2,
+        "mergePairCount": 1,
+        "outputCount": 1,
+        "balanced": true,
+        "formula": "inputCount - mergePairCount = outputCount"
+      }
+    },
+    "components": [
+      {
+        "id": "52ee9c06228d16b2",
+        "identity": "npm||lodash|4.17.21",
+        "type": "npm",
+        "name": "lodash",
+        "version": "4.17.21",
+        "versions": [
+          "4.17.21"
+        ],
+        "sources": [
+          "javascript-lock-cataloger",
+          "javascript-package-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          },
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": [],
+        "checksums": [
+          {
+            "algorithm": "sha512",
+            "value": "aaaa",
+            "source": "lock-file"
+          },
+          {
+            "algorithm": "sha512",
+            "value": "bbbb",
+            "source": "node-modules"
+          }
+        ],
+        "externalIdentifiers": [],
+        "conflicts": [
+          {
+            "field": "checksum:sha512",
+            "values": [
+              "aaaa",
+              "bbbb"
+            ],
+            "resolution": "kept-both",
+            "rule": "checksum.conflict",
+            "note": "records disagree on the checksum; both values are retained"
+          }
+        ],
+        "members": [
+          "pkg-a",
+          "pkg-b"
+        ],
+        "rules": [
+          "name.exact",
+          "type.exact",
+          "version.exact"
+        ],
+        "state": "merged"
+      }
+    ]
+  },
+  {
+    "name": "agreeing evidence unions external identifiers",
+    "input": [
+      {
+        "id": "pkg-a",
+        "name": "@angular/core",
+        "version": "12.0.0",
+        "type": "npm",
+        "purl": "pkg:npm/%40angular/core@12.0.0",
+        "foundBy": "javascript-package-cataloger",
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-b",
+        "name": "angular/core",
+        "version": "12.0.0",
+        "type": "npm",
+        "foundBy": "javascript-lock-cataloger",
+        "locations": [
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": [
+          {
+            "type": "cpe",
+            "value": "cpe:2.3:a:angular:core:12.0.0:*:*:*:*:*:*:*",
+            "source": "declared"
+          }
+        ]
+      }
+    ],
+    "report": {
+      "version": "identity-merge/v1",
+      "inputCount": 2,
+      "outputCount": 1,
+      "mergePairCount": 1,
+      "mergedCount": 1,
+      "uniqueCount": 0,
+      "groupCount": 1,
+      "conflictCount": 0,
+      "pendingCount": 0,
+      "crossReferenceCount": 0,
+      "conflictThreshold": 1000,
+      "thresholdExceeded": false,
+      "rules": [
+        {
+          "id": "checksum.conflict",
+          "description": "records of the same component carry different checksums for one algorithm; both are retained"
+        },
+        {
+          "id": "identity.insufficient",
+          "description": "a record is missing name or type; it cannot participate in a merge"
+        },
+        {
+          "id": "name.case-fold",
+          "description": "package names differ only in letter case"
+        },
+        {
+          "id": "name.exact",
+          "description": "package names are identical"
+        },
+        {
+          "id": "name.mismatch",
+          "description": "package names do not normalize to the same value"
+        },
+        {
+          "id": "name.namespace-fold",
+          "description": "package names carry the same namespace in different spellings (e.g. '@scope/name' and 'scope/name')"
+        },
+        {
+          "id": "name.separator-fold",
+          "description": "package names differ only in runs of '-', '_' or '.'"
+        },
+        {
+          "id": "purl.agrees",
+          "description": "the package URL agrees with the name and version of the record"
+        },
+        {
+          "id": "purl.disagrees",
+          "description": "the package URL names a different component than the package fields; merge is refused"
+        },
+        {
+          "id": "type.distinct-no-merge",
+          "description": "records name the same component but belong to different package types; they are cross-referenced instead of merged"
+        },
+        {
+          "id": "type.exact",
+          "description": "package types are identical; different types are never merged"
+        },
+        {
+          "id": "type.mismatch",
+          "description": "records have different package types"
+        },
+        {
+          "id": "version.exact",
+          "description": "package versions are identical"
+        },
+        {
+          "id": "version.mismatch",
+          "description": "package versions belong to different version classes"
+        },
+        {
+          "id": "version.missing",
+          "description": "at least one record has no version; the identity cannot be confirmed"
+        },
+        {
+          "id": "version.revision-variant",
+          "description": "package versions differ only by the package-manager revision (e.g. '1.2.3-1' and '1.2.3'); both values are retained"
+        },
+        {
+          "id": "version.semver-canonical",
+          "description": "package versions are the same semantic version in different spellings (e.g. 'v1.2' and '1.2.0')"
+        }
+      ],
+      "groups": [
+        {
+          "identity": "npm|angular|core|12.0.0",
+          "type": "npm",
+          "namespace": "angular",
+          "name": "@angular/core",
+          "normalizedName": "core",
+          "version": "12.0.0",
+          "versionValues": [
+            "12.0.0"
+          ],
+          "rules": [
+            "name.namespace-fold",
+            "type.exact",
+            "version.exact"
+          ],
+          "matches": [
+            {
+              "left": "pkg-a",
+              "right": "pkg-b",
+              "rules": [
+                "name.namespace-fold",
+                "version.exact"
+              ]
+            }
+          ],
+          "members": [
+            {
+              "id": "pkg-a",
+              "name": "@angular/core",
+              "version": "12.0.0",
+              "type": "npm",
+              "purl": "pkg:npm/%40angular/core@12.0.0",
+              "foundBy": "javascript-package-cataloger",
+              "locationCount": 1
+            },
+            {
+              "id": "pkg-b",
+              "name": "angular/core",
+              "version": "12.0.0",
+              "type": "npm",
+              "foundBy": "javascript-lock-cataloger",
+              "locationCount": 1
+            }
+          ],
+          "mergedID": "375fc2c8ff3a6b4b",
+          "sources": [
+            "javascript-lock-cataloger",
+            "javascript-package-cataloger"
+          ],
+          "locationCount": 2,
+          "state": "merged"
+        }
+      ],
+      "standalone": [],
+      "crossReferences": [],
+      "reconciliation": {
+        "inputCount": 2,
+        "mergePairCount": 1,
+        "outputCount": 1,
+        "balanced": true,
+        "formula": "inputCount - mergePairCount = outputCount"
+      }
+    },
+    "components": [
+      {
+        "id": "375fc2c8ff3a6b4b",
+        "identity": "npm|angular|core|12.0.0",
+        "type": "npm",
+        "namespace": "angular",
+        "name": "@angular/core",
+        "version": "12.0.0",
+        "versions": [
+          "12.0.0"
+        ],
+        "purl": "pkg:npm/%40angular/core@12.0.0",
+        "sources": [
+          "javascript-lock-cataloger",
+          "javascript-package-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          },
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [
+          {
+            "type": "cpe",
+            "value": "cpe:2.3:a:angular:core:12.0.0:*:*:*:*:*:*:*",
+            "source": "declared"
+          },
+          {
+            "type": "purl",
+            "value": "pkg:npm/%40angular/core@12.0.0",
+            "source": "package-url"
+          }
+        ],
+        "members": [
+          "pkg-a",
+          "pkg-b"
+        ],
+        "rules": [
+          "name.namespace-fold",
+          "type.exact",
+          "version.exact"
+        ],
+        "state": "merged"
+      }
+    ]
+  },
+  {
+    "name": "no duplicates leaves every entry unique",
+    "input": [
+      {
+        "id": "pkg-a",
+        "name": "alpha",
+        "version": "1.0.0",
+        "type": "python",
+        "foundBy": "python-package-cataloger",
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-b",
+        "name": "beta",
+        "version": "2.0.0",
+        "type": "python",
+        "foundBy": "python-package-cataloger",
+        "locations": [
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      },
+      {
+        "id": "pkg-c",
+        "name": "gamma",
+        "version": "3.0.0",
+        "type": "gem",
+        "foundBy": "ruby-package-cataloger",
+        "locations": [
+          {
+            "path": "/c",
+            "accessPath": "/c"
+          }
+        ],
+        "licenses": null,
+        "checksums": null,
+        "externalIdentifiers": null
+      }
+    ],
+    "report": {
+      "version": "identity-merge/v1",
+      "inputCount": 3,
+      "outputCount": 3,
+      "mergePairCount": 0,
+      "mergedCount": 0,
+      "uniqueCount": 3,
+      "groupCount": 0,
+      "conflictCount": 0,
+      "pendingCount": 0,
+      "crossReferenceCount": 0,
+      "conflictThreshold": 1000,
+      "thresholdExceeded": false,
+      "rules": [
+        {
+          "id": "checksum.conflict",
+          "description": "records of the same component carry different checksums for one algorithm; both are retained"
+        },
+        {
+          "id": "identity.insufficient",
+          "description": "a record is missing name or type; it cannot participate in a merge"
+        },
+        {
+          "id": "name.case-fold",
+          "description": "package names differ only in letter case"
+        },
+        {
+          "id": "name.exact",
+          "description": "package names are identical"
+        },
+        {
+          "id": "name.mismatch",
+          "description": "package names do not normalize to the same value"
+        },
+        {
+          "id": "name.namespace-fold",
+          "description": "package names carry the same namespace in different spellings (e.g. '@scope/name' and 'scope/name')"
+        },
+        {
+          "id": "name.separator-fold",
+          "description": "package names differ only in runs of '-', '_' or '.'"
+        },
+        {
+          "id": "purl.agrees",
+          "description": "the package URL agrees with the name and version of the record"
+        },
+        {
+          "id": "purl.disagrees",
+          "description": "the package URL names a different component than the package fields; merge is refused"
+        },
+        {
+          "id": "type.distinct-no-merge",
+          "description": "records name the same component but belong to different package types; they are cross-referenced instead of merged"
+        },
+        {
+          "id": "type.exact",
+          "description": "package types are identical; different types are never merged"
+        },
+        {
+          "id": "type.mismatch",
+          "description": "records have different package types"
+        },
+        {
+          "id": "version.exact",
+          "description": "package versions are identical"
+        },
+        {
+          "id": "version.mismatch",
+          "description": "package versions belong to different version classes"
+        },
+        {
+          "id": "version.missing",
+          "description": "at least one record has no version; the identity cannot be confirmed"
+        },
+        {
+          "id": "version.revision-variant",
+          "description": "package versions differ only by the package-manager revision (e.g. '1.2.3-1' and '1.2.3'); both values are retained"
+        },
+        {
+          "id": "version.semver-canonical",
+          "description": "package versions are the same semantic version in different spellings (e.g. 'v1.2' and '1.2.0')"
+        }
+      ],
+      "groups": [],
+      "standalone": [],
+      "crossReferences": [],
+      "reconciliation": {
+        "inputCount": 3,
+        "mergePairCount": 0,
+        "outputCount": 3,
+        "balanced": true,
+        "formula": "inputCount - mergePairCount = outputCount"
+      }
+    },
+    "components": [
+      {
+        "id": "81f4b233f99aa810",
+        "identity": "gem||gamma|3.0.0",
+        "type": "gem",
+        "name": "gamma",
+        "version": "3.0.0",
+        "versions": [
+          "3.0.0"
+        ],
+        "sources": [
+          "ruby-package-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/c",
+            "accessPath": "/c"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [],
+        "members": [
+          "pkg-c"
+        ],
+        "rules": [
+          "name.exact",
+          "type.exact",
+          "version.exact"
+        ],
+        "state": "unique"
+      },
+      {
+        "id": "b7054593340ee51d",
+        "identity": "python||alpha|1.0.0",
+        "type": "python",
+        "name": "alpha",
+        "version": "1.0.0",
+        "versions": [
+          "1.0.0"
+        ],
+        "sources": [
+          "python-package-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/a",
+            "accessPath": "/a"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [],
+        "members": [
+          "pkg-a"
+        ],
+        "rules": [
+          "name.exact",
+          "type.exact",
+          "version.exact"
+        ],
+        "state": "unique"
+      },
+      {
+        "id": "cc6bf71eaf67373b",
+        "identity": "python||beta|2.0.0",
+        "type": "python",
+        "name": "beta",
+        "version": "2.0.0",
+        "versions": [
+          "2.0.0"
+        ],
+        "sources": [
+          "python-package-cataloger"
+        ],
+        "locations": [
+          {
+            "path": "/b",
+            "accessPath": "/b"
+          }
+        ],
+        "licenses": [],
+        "checksums": [],
+        "externalIdentifiers": [],
+        "members": [
+          "pkg-b"
+        ],
+        "rules": [
+          "name.exact",
+          "type.exact",
+          "version.exact"
+        ],
+        "state": "unique"
+      }
+    ]
+  }
+]

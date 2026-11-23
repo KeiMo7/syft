@@ -1,0 +1,196 @@
+{
+  "before": {
+    "packageCount": 3,
+    "artifacts": [
+      {
+        "name": "requests",
+        "version": "2.22.0",
+        "type": "python",
+        "foundBy": "python-installed-package-cataloger",
+        "state": null
+      },
+      {
+        "name": "requests",
+        "version": "2.22.0",
+        "type": "python",
+        "foundBy": "python-package-cataloger",
+        "state": null
+      },
+      {
+        "name": "urllib3",
+        "version": "1.25.11",
+        "type": "python",
+        "foundBy": "python-package-cataloger",
+        "state": null
+      }
+    ]
+  },
+  "after": {
+    "packageCount": 2,
+    "artifacts": [
+      {
+        "name": "requests",
+        "version": "2.22.0",
+        "type": "python",
+        "foundBy": "python-installed-package-cataloger",
+        "state": "merged"
+      },
+      {
+        "name": "urllib3",
+        "version": "1.25.11",
+        "type": "python",
+        "foundBy": "python-package-cataloger",
+        "state": "unique"
+      }
+    ],
+    "report": {
+      "version": "identity-merge/v1",
+      "inputCount": 3,
+      "outputCount": 2,
+      "mergePairCount": 1,
+      "mergedCount": 1,
+      "uniqueCount": 1,
+      "groupCount": 1,
+      "conflictCount": 0,
+      "pendingCount": 0,
+      "crossReferenceCount": 0,
+      "conflictThreshold": 100,
+      "thresholdExceeded": false,
+      "rules": [
+        {
+          "id": "checksum.conflict",
+          "description": "records of the same component carry different checksums for one algorithm; both are retained"
+        },
+        {
+          "id": "identity.insufficient",
+          "description": "a record is missing name or type; it cannot participate in a merge"
+        },
+        {
+          "id": "name.case-fold",
+          "description": "package names differ only in letter case"
+        },
+        {
+          "id": "name.exact",
+          "description": "package names are identical"
+        },
+        {
+          "id": "name.mismatch",
+          "description": "package names do not normalize to the same value"
+        },
+        {
+          "id": "name.namespace-fold",
+          "description": "package names carry the same namespace in different spellings (e.g. '@scope/name' and 'scope/name')"
+        },
+        {
+          "id": "name.separator-fold",
+          "description": "package names differ only in runs of '-', '_' or '.'"
+        },
+        {
+          "id": "purl.agrees",
+          "description": "the package URL agrees with the name and version of the record"
+        },
+        {
+          "id": "purl.disagrees",
+          "description": "the package URL names a different component than the package fields; merge is refused"
+        },
+        {
+          "id": "type.distinct-no-merge",
+          "description": "records name the same component but belong to different package types; they are cross-referenced instead of merged"
+        },
+        {
+          "id": "type.exact",
+          "description": "package types are identical; different types are never merged"
+        },
+        {
+          "id": "type.mismatch",
+          "description": "records have different package types"
+        },
+        {
+          "id": "version.exact",
+          "description": "package versions are identical"
+        },
+        {
+          "id": "version.mismatch",
+          "description": "package versions belong to different version classes"
+        },
+        {
+          "id": "version.missing",
+          "description": "at least one record has no version; the identity cannot be confirmed"
+        },
+        {
+          "id": "version.revision-variant",
+          "description": "package versions differ only by the package-manager revision (e.g. '1.2.3-1' and '1.2.3'); both values are retained"
+        },
+        {
+          "id": "version.semver-canonical",
+          "description": "package versions are the same semantic version in different spellings (e.g. 'v1.2' and '1.2.0')"
+        }
+      ],
+      "groups": [
+        {
+          "identity": "python||requests|2.22.0",
+          "type": "python",
+          "name": "requests",
+          "normalizedName": "requests",
+          "version": "2.22.0",
+          "versionValues": [
+            "2.22.0"
+          ],
+          "rules": [
+            "name.exact",
+            "type.exact",
+            "version.exact"
+          ],
+          "matches": [
+            {
+              "left": "a3c662c525d37c22",
+              "right": "fce21e871a385e96",
+              "rules": [
+                "name.exact",
+                "version.exact"
+              ]
+            }
+          ],
+          "members": [
+            {
+              "id": "a3c662c525d37c22",
+              "name": "requests",
+              "version": "2.22.0",
+              "type": "python",
+              "purl": "pkg:pypi/requests@2.22.0",
+              "foundBy": "python-installed-package-cataloger",
+              "metadataType": "python-package",
+              "locationCount": 1
+            },
+            {
+              "id": "fce21e871a385e96",
+              "name": "requests",
+              "version": "2.22.0",
+              "type": "python",
+              "purl": "pkg:pypi/requests@2.22.0",
+              "foundBy": "python-package-cataloger",
+              "metadataType": "python-pip-requirements-entry",
+              "locationCount": 1
+            }
+          ],
+          "mergedID": "63b5c7b0c47e9e88",
+          "sources": [
+            "python-installed-package-cataloger",
+            "python-package-cataloger"
+          ],
+          "locationCount": 2,
+          "state": "merged"
+        }
+      ],
+      "standalone": [],
+      "crossReferences": [],
+      "reconciliation": {
+        "inputCount": 3,
+        "mergePairCount": 1,
+        "outputCount": 2,
+        "balanced": true,
+        "formula": "inputCount - mergePairCount = outputCount"
+      }
+    }
+  }
+}

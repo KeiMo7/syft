@@ -651,3 +651,37 @@ func TestCreateSBOMConfig_archiveTaskGroup(t *testing.T) {
 			"java's own squash-inlined depth must not be written to either")
 	})
 }
+
+func TestCreateSBOMConfig_identityMergeTaskOrdering(t *testing.T) {
+	src := source.Description{Metadata: source.DirectoryMetadata{}}
+
+	// default config: the identity merge task must not appear
+	defaultGroups, _, err := DefaultCreateSBOMConfig().makeTaskGroups(src, nil)
+	require.NoError(t, err)
+	assert.NotContains(t, taskGroupNames(defaultGroups), []string{"identity-merge"})
+
+	// enabled: the task runs after relationships and before unknowns
+	cfg := DefaultCreateSBOMConfig().WithIdentityMergeConfig(
+		cataloging.DefaultIdentityMergeConfig().WithEnabled(true),
+	)
+	groups, _, err := cfg.makeTaskGroups(src, nil)
+	require.NoError(t, err)
+
+	var relIdx, mergeIdx, unknownsIdx = -1, -1, -1
+	for i, group := range groups {
+		for _, tsk := range group {
+			switch tsk.Name() {
+			case "relationships-cataloger":
+				relIdx = i
+			case "identity-merge":
+				mergeIdx = i
+			case "unknowns-labeler":
+				unknownsIdx = i
+			}
+		}
+	}
+
+	require.NotEqual(t, -1, mergeIdx, "identity merge task must be scheduled")
+	assert.Greater(t, mergeIdx, relIdx, "identity merge must run after relationships are built")
+	assert.Less(t, mergeIdx, unknownsIdx, "identity merge must run before unknowns are labeled")
+}

@@ -42,6 +42,7 @@ type Catalog struct {
 	Parallelism   int                 `yaml:"parallelism" json:"parallelism" mapstructure:"parallelism"` // the number of catalog workers to run in parallel
 	Relationships relationshipsConfig `yaml:"relationships" json:"relationships" mapstructure:"relationships"`
 	Compliance    complianceConfig    `yaml:"compliance" json:"compliance" mapstructure:"compliance"`
+	IdentityMerge identityMergeConfig `yaml:"identity-merge" json:"identity-merge" mapstructure:"identity-merge"`
 	Enrich        []string            `yaml:"enrich" json:"enrich" mapstructure:"enrich"`
 
 	// ecosystem-specific cataloger configuration
@@ -88,6 +89,7 @@ func DefaultCatalog() Catalog {
 		Java:          defaultJavaConfig(),
 		File:          defaultFileConfig(),
 		Relationships: defaultRelationshipsConfig(),
+		IdentityMerge: defaultIdentityMergeConfig(),
 		Unknowns:      defaultUnknowns(),
 		Source:        defaultSourceConfig(),
 		Parallelism:   cfg.Parallelism,
@@ -100,6 +102,7 @@ func (cfg Catalog) ToSBOMConfig(id clio.Identification) *syft.CreateSBOMConfig {
 		WithParallelism(cfg.Parallelism).
 		WithRelationshipsConfig(cfg.ToRelationshipsConfig()).
 		WithComplianceConfig(cfg.ToComplianceConfig()).
+		WithIdentityMergeConfig(cfg.IdentityMerge.ToConfig()).
 		WithUnknownsConfig(cfg.ToUnknownsConfig()).
 		WithSearchConfig(cfg.ToSearchConfig()).
 		WithArchiveConfig(cfg.ToArchiveConfig()).

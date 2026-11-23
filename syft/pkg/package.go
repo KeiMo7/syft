@@ -47,6 +47,11 @@ type Package struct {
 	// PURL is the Package URL (see https://github.com/package-url/purl-spec)
 	PURL string `hash:"ignore"`
 
+	// MergeInfo describes how this entry was derived from one or more source records during
+	// identity-based merging. It is nil for packages that were never merged, which keeps the
+	// field out of the output for every existing consumer.
+	MergeInfo *MergeInfo `hash:"ignore"`
+
 	// Metadata is additional data found while parsing the package source
 	Metadata any
 }
