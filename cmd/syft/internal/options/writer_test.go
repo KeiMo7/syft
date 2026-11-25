@@ -97,9 +97,10 @@ func Test_newSBOMMultiWriter(t *testing.T) {
 	}
 
 	tests := []struct {
-		outputs  []sbomWriterDescription
-		err      bool
-		expected []writerConfig
+		outputs            []sbomWriterDescription
+		err                bool
+		expectedPublishers []writerConfig
+		expectedFiles      []writerConfig
 	}{
 		{
 			outputs: []sbomWriterDescription{},
@@ -112,7 +113,7 @@ func Test_newSBOMMultiWriter(t *testing.T) {
 					Path:   "",
 				},
 			},
-			expected: []writerConfig{
+			expectedPublishers: []writerConfig{
 				{
 					format: "table",
 				},
@@ -124,7 +125,7 @@ func Test_newSBOMMultiWriter(t *testing.T) {
 					Format: dummyFormat("json"),
 				},
 			},
-			expected: []writerConfig{
+			expectedPublishers: []writerConfig{
 				{
 					format: "json",
 				},
@@ -137,7 +138,7 @@ func Test_newSBOMMultiWriter(t *testing.T) {
 					Path:   "test-2.json",
 				},
 			},
-			expected: []writerConfig{
+			expectedFiles: []writerConfig{
 				{
 					format: "json",
 					file:   "test-2.json",
@@ -155,7 +156,7 @@ func Test_newSBOMMultiWriter(t *testing.T) {
 					Path:   "test-3/2.json",
 				},
 			},
-			expected: []writerConfig{
+			expectedFiles: []writerConfig{
 				{
 					format: "json",
 					file:   "test-3/1.json",
@@ -176,10 +177,12 @@ func Test_newSBOMMultiWriter(t *testing.T) {
 					Path:   "test-4.json",
 				},
 			},
-			expected: []writerConfig{
+			expectedPublishers: []writerConfig{
 				{
 					format: "text",
 				},
+			},
+			expectedFiles: []writerConfig{
 				{
 					format: "spdx-json",
 					file:   "test-4.json",
@@ -193,7 +196,7 @@ func Test_newSBOMMultiWriter(t *testing.T) {
 			outputs := test.outputs
 			for i := range outputs {
 				if outputs[i].Path != "" {
-					outputs[i].Path = tmp + outputs[i].Path
+					outputs[i].Path = filepath.Join(tmp, outputs[i].Path)
 				}
 			}
 
@@ -206,25 +209,27 @@ func Test_newSBOMMultiWriter(t *testing.T) {
 			require.NoError(t, err)
 			t.Cleanup(func() { _ = mw.Close() })
 
-			assert.Len(t, mw.writers, len(test.expected))
+			assert.Len(t, mw.publishers, len(test.expectedPublishers))
+			for i, e := range test.expectedPublishers {
+				assert.Equal(t, e.format, string(mw.publishers[i].format.ID()))
+			}
 
-			for i, e := range test.expected {
-				switch w := mw.writers[i].(type) {
-				case *sbomStreamWriter:
-					assert.Equal(t, string(w.format.ID()), e.format)
-					assert.NotNil(t, w.out)
-					if e.file != "" {
-						assert.FileExists(t, tmp+e.file)
-					}
-				case *sbomPublisher:
-					assert.Equal(t, string(w.format.ID()), e.format)
-				default:
-					t.Fatalf("unknown writer type: %T", w)
+			if len(test.expectedFiles) > 0 {
+				require.NotNil(t, mw.batch)
+				require.NoError(t, mw.Write(emptyTestSBOM(t)))
+				for _, e := range test.expectedFiles {
+					assert.FileExists(t, filepath.Join(tmp, e.file))
 				}
-
+			} else {
+				assert.Nil(t, mw.batch)
 			}
 		})
 	}
+}
+
+// emptyTestSBOM returns a minimal SBOM for writer tests; the dummy encoder ignores its content.
+func emptyTestSBOM(t *testing.T) sbom.SBOM {
+	return sbom.SBOM{}
 }
 
 func Test_newSBOMWriterDescription(t *testing.T) {

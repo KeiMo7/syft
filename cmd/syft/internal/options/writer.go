@@ -2,11 +2,11 @@ package options
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -16,6 +16,7 @@ import (
 	"github.com/anchore/go-homedir"
 	"github.com/anchore/syft/internal/bus"
 	"github.com/anchore/syft/internal/log"
+	"github.com/anchore/syft/internal/sbomartifact"
 	"github.com/anchore/syft/syft/format"
 	"github.com/anchore/syft/syft/format/table"
 	"github.com/anchore/syft/syft/sbom"
@@ -25,11 +26,6 @@ var _ interface {
 	io.Closer
 	sbom.Writer
 } = (*sbomMultiWriter)(nil)
-
-var _ interface {
-	io.Closer
-	sbom.Writer
-} = (*sbomStreamWriter)(nil)
 
 // makeSBOMWriter creates a sbom.Writer for output or returns an error. this will either return a valid writer
 // or an error but neither both and if there is no error, sbom.Writer.Close() should be called
@@ -156,102 +152,84 @@ func newSBOMWriterDescription(f sbom.FormatEncoder, p string) sbomWriterDescript
 	}
 }
 
-// sbomMultiWriter holds a list of child sbom.Writers to apply all Write and Close operations to
+// sbomMultiWriter holds a list of child sbom.Writers to apply all Write and Close operations to.
+// Path-less outputs keep streaming to the report bus (terminal output); every output with a path
+// is handed to the atomic persistence batch, which covers single files, directory bundles and
+// archive bundles behind one implementation.
 type sbomMultiWriter struct {
-	writers []sbom.Writer
+	publishers []*sbomPublisher
+	batch      *sbomartifact.Batch
 }
 
-// newSBOMMultiWriter create all report writers from input options; if a file is not specified the given defaultWriter is used
+// newSBOMMultiWriter create all report writers from input options; if a file is not specified the given defaultWriter is used.
+// No destination is opened or created here: all filesystem work happens in Write, inside the
+// atomic batch, so a later failure cannot leave partially opened files behind.
 func newSBOMMultiWriter(options ...sbomWriterDescription) (_ *sbomMultiWriter, err error) {
 	if len(options) == 0 {
 		return nil, fmt.Errorf("no output options provided")
 	}
 
 	out := &sbomMultiWriter{}
-	defer func() {
-		// don't leak the files already opened when a later output fails
-		if err != nil {
-			_ = out.Close()
-		}
-	}()
+
+	var requests []sbomartifact.Request
+	requestByPath := make(map[string]int)
 
 	for _, option := range options {
-		switch len(option.Path) {
-		case 0:
-			out.writers = append(out.writers, &sbomPublisher{
-				format: option.Format,
-			})
-		default:
-			// create any missing subdirectories (option.Path is a host path, so this must be filepath)
-			dir := filepath.Dir(option.Path)
-			if dir != "" {
-				s, err := os.Stat(dir)
-				if err != nil {
-					err = os.MkdirAll(dir, 0755) // maybe should be os.ModePerm ?
-					if err != nil {
-						return nil, err
-					}
-				} else if !s.IsDir() {
-					return nil, fmt.Errorf("output path does not contain a valid directory: %s", option.Path)
-				}
-			}
-			fileOut, err := os.OpenFile(option.Path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-			if err != nil {
-				return nil, fmt.Errorf("unable to create report file: %w", err)
-			}
-			out.writers = append(out.writers, &sbomStreamWriter{
-				format: option.Format,
-				out:    fileOut,
+		if option.Path == "" {
+			out.publishers = append(out.publishers, &sbomPublisher{format: option.Format})
+			continue
+		}
+
+		if idx, ok := requestByPath[option.Path]; ok {
+			requests[idx].Encoders = append(requests[idx].Encoders, option.Format)
+		} else {
+			requestByPath[option.Path] = len(requests)
+			requests = append(requests, sbomartifact.Request{
+				Path:     option.Path,
+				Encoders: []sbom.FormatEncoder{option.Format},
 			})
 		}
+	}
+
+	if len(requests) > 0 {
+		// validation (path shape, duplicate single-file conflicts, empty format sets) happens here,
+		// before any target becomes visible; locking is also acquired up front.
+		batch, err := sbomartifact.NewBatch(context.Background(), requests...)
+		if err != nil {
+			return nil, err
+		}
+		out.batch = batch
 	}
 
 	return out, nil
 }
 
-// Write writes the SBOM to all writers
+// Write writes the SBOM to all writers. Terminal outputs are encoded independently so a busy
+// report bus can never touch a persistence target, and the batch itself is all-or-nothing.
 func (m *sbomMultiWriter) Write(s sbom.SBOM) (errs error) {
-	for _, w := range m.writers {
-		err := w.Write(s)
-		if err != nil {
+	for _, p := range m.publishers {
+		if err := p.Write(s); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("unable to write SBOM: %w", err))
+		}
+	}
+	if m.batch != nil {
+		if err := m.batch.Write(s); err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("unable to write SBOM: %w", err))
 		}
 	}
 	return errs
 }
 
-// Close releases any files held by the writers. Write already closes each file it writes to, so this matters
-// when the SBOM is never written (e.g. an error after the writer was created).
+// Close releases any locks held by an unwritten batch (for example when a scan fails after the
+// writer was constructed). Successful writes release their locks inside Write.
 func (m *sbomMultiWriter) Close() error {
 	var errs error
-	for _, w := range m.writers {
-		if c, ok := w.(io.Closer); ok {
-			if err := c.Close(); err != nil && !errors.Is(err, os.ErrClosed) {
-				errs = multierror.Append(errs, err)
-			}
+	if m.batch != nil {
+		if err := m.batch.Close(); err != nil && !errors.Is(err, os.ErrClosed) {
+			errs = multierror.Append(errs, err)
 		}
 	}
 	return errs
-}
-
-// sbomStreamWriter implements sbom.Writer for a given format and io.Writer, also providing a close function for cleanup
-type sbomStreamWriter struct {
-	format sbom.FormatEncoder
-	out    io.Writer
-}
-
-// Write the provided SBOM to the data stream
-func (w *sbomStreamWriter) Write(s sbom.SBOM) error {
-	defer w.Close()
-	return w.format.Encode(w.out, s)
-}
-
-// Close any resources, such as open files
-func (w *sbomStreamWriter) Close() error {
-	if closer, ok := w.out.(io.Closer); ok {
-		return closer.Close()
-	}
-	return nil
 }
 
 // sbomPublisher implements sbom.Writer that publishes results to the event bus

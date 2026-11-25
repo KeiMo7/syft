@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -17,6 +16,7 @@ import (
 	"github.com/anchore/syft/internal"
 	"github.com/anchore/syft/internal/bus"
 	"github.com/anchore/syft/internal/log"
+	"github.com/anchore/syft/internal/sbomartifact"
 	"github.com/anchore/syft/internal/spillbuf"
 	"github.com/anchore/syft/internal/tmpdir"
 	"github.com/anchore/syft/syft/format"
@@ -288,22 +288,19 @@ func writeUnchanged(output string, defaultFile string, inputInfo os.FileInfo, re
 		return nil
 	}
 
-	if err := os.MkdirAll(filepath.Dir(expandedPath), 0755); err != nil {
-		return fmt.Errorf("unable to create report directory: %w", err)
-	}
-
-	f, err := os.OpenFile(expandedPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		return fmt.Errorf("unable to create report file: %w", err)
-	}
-
-	if _, err := io.Copy(f, reader); err != nil {
-		_ = f.Close()
-		return fmt.Errorf("unable to write report file: %w", err)
-	}
-
-	return f.Close()
+	// route the verbatim copy through the shared atomic persistence helper so the passthrough path
+	// gets the same no-truncation, rollback-safe guarantees as an encoded single-file output; the
+	// bytes copied remain identical to the input document.
+	return sbomartifact.CopyFileAtomic(nopCloseReadSeeker{ReadSeeker: reader}, expandedPath)
 }
+
+// nopCloseReadSeeker adapts an io.ReadSeeker to io.ReadSeekCloser without taking ownership of the
+// underlying reader's lifecycle (the caller closes the real reader).
+type nopCloseReadSeeker struct {
+	io.ReadSeeker
+}
+
+func (nopCloseReadSeeker) Close() error { return nil }
 
 // isSameFile reports whether the given path names the file the input is being read from. Comparing the input's
 // os.FileInfo rather than its path covers a shell redirect onto STDIN, which has no path to compare.
